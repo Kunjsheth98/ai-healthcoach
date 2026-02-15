@@ -1,0 +1,82 @@
+import re
+
+# --------------------------------------------------
+# EMERGENCY KEYWORDS
+# --------------------------------------------------
+
+EMERGENCY_KEYWORDS = [
+    "chest pain",
+    "heart attack",
+    "can't breathe",
+    "difficulty breathing",
+    "overdose",
+    "unconscious",
+    "fainted",
+    "seizure",
+    "severe bleeding",
+]
+
+# --------------------------------------------------
+# UNSAFE MEDICAL REQUESTS
+# --------------------------------------------------
+
+RESTRICTED_PATTERNS = [
+    r"change my dosage",
+    r"stop taking medicine",
+    r"what prescription should i take",
+    r"diagnose me",
+    r"what disease do i have",
+]
+
+
+# --------------------------------------------------
+# CHECK EMERGENCY
+# --------------------------------------------------
+
+def detect_emergency(text):
+
+    text = text.lower()
+
+    for keyword in EMERGENCY_KEYWORDS:
+        if keyword in text:
+            return True
+
+    return False
+
+
+# --------------------------------------------------
+# CHECK RESTRICTED REQUEST
+# --------------------------------------------------
+
+def detect_restricted_request(text):
+
+    text = text.lower()
+
+    for pattern in RESTRICTED_PATTERNS:
+        if re.search(pattern, text):
+            return True
+
+    return False
+
+
+# --------------------------------------------------
+# SAFE RESPONSE OVERRIDE
+# --------------------------------------------------
+
+def emergency_response():
+
+    return (
+        "🚨 This may be a medical emergency.\n\n"
+        "Please contact local emergency services or visit the nearest "
+        "hospital immediately. I can provide general wellness guidance "
+        "but cannot handle emergencies."
+    )
+
+
+def restricted_response():
+
+    return (
+        "⚠️ I can't provide medical diagnosis or change prescriptions.\n\n"
+        "Please consult a licensed doctor for medical decisions. "
+        "I can help with general health guidance and lifestyle support."
+    )
