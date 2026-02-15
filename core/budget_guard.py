@@ -32,13 +32,21 @@ def check_budget(memory):
 
     init_budget(memory)
 
+    # Admin custom limit (fallback = default)
+    admin_limit = memory.get("admin_budget_limit", DAILY_COST_LIMIT)
+
+    # Auto shutdown when budget reached
+    if memory["budget"]["daily_cost"] >= admin_limit:
+        memory["ai_paused"] = True
+        save_memory(memory)
+        return False
+
+    # Call limit safety
     if memory["budget"]["ai_calls_today"] >= MAX_DAILY_AI_CALLS:
         return False
 
-    if memory["budget"]["daily_cost"] >= DAILY_COST_LIMIT:
-        return False
-
     return True
+
 
 
 # -----------------------------------
