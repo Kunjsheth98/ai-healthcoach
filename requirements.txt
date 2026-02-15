@@ -1,4 +1,8 @@
 streamlit
 openai
-twilio
+matplotlib
 pandas
+numpy
+pillow
+requests
+python-dotenv
