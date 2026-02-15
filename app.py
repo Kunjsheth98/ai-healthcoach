@@ -37,6 +37,8 @@ from agents.prescription_reader import prescription_reader_ui
 
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
+from admin.control_center import admin_control_center
+
 
 # ================= AI =================
 from ai.coach import ask_health_coach
@@ -284,6 +286,9 @@ with tab_records:
 if st.session_state.user in ADMIN_USERS:
     with tab_admin:
         admin_dashboard()
+        st.divider()
+        admin_control_center(memory)
+
 
 # =====================================================
 # SAVE MEMORY

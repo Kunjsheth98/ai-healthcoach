@@ -4,7 +4,7 @@
 
 from core.config import client
 
-# ---- SAFETY GUARDRAILS ----
+# ---------------- SAFETY GUARDRAILS ----------------
 from core.medical_guardrails import (
     detect_emergency,
     detect_restricted_request,
@@ -12,13 +12,17 @@ from core.medical_guardrails import (
     restricted_response,
 )
 
-# ---- DEPLOYMENT SHIELD (RATE LIMIT) ----
+# ---------------- RATE LIMIT SHIELD ----------------
 from core.deployment_shield import check_rate_limit, register_usage
 
-# ---- BUDGET AUTO SHUTDOWN ----
-from core.budget_guard import check_budget, register_ai_call
-from core.cost_meter import register_cost
+# ---------------- BUDGET + COST CONTROL ----------------
+from core.budget_guard import (
+    check_budget,
+    register_ai_call,
+    allow_request
+)
 
+from core.cost_meter import register_cost
 
 
 # =====================================================
@@ -27,38 +31,43 @@ from core.cost_meter import register_cost
 
 def ask_health_coach(memory, message, chat_history):
 
+    # ADMIN KILL SWITCH
+    if memory.get("ai_paused", False):
+        return "🛑 AI is temporarily paused by administrator."
+    
     # -------------------------------------------------
-    # 🛑 MEDICAL EMERGENCY CHECK
+    # 🛑 EMERGENCY DETECTION (FIRST PRIORITY)
     # -------------------------------------------------
-
     if detect_emergency(message):
         return emergency_response()
 
     # -------------------------------------------------
-    # ⚠️ RESTRICTED MEDICAL REQUEST CHECK
+    # ⚠️ RESTRICTED MEDICAL REQUEST
     # -------------------------------------------------
-
     if detect_restricted_request(message):
         return restricted_response()
 
     # -------------------------------------------------
-    # 💰 BUDGET SAFETY CHECK
+    # 💰 DAILY BUDGET SAFETY
     # -------------------------------------------------
-
     if not check_budget(memory):
-        return "🛑 Daily AI budget limit reached. Please try again tomorrow."
+        return "🛑 Daily AI usage limit reached. Please try again tomorrow."
 
     # -------------------------------------------------
-    # ⏱️ RATE LIMIT / SPAM PROTECTION
+    # ⏱️ GLOBAL RATE LIMIT (ANTI-SPAM)
     # -------------------------------------------------
-
     allowed, reason = check_rate_limit(memory)
-
     if not allowed:
         return f"⛔ {reason}"
 
     # -------------------------------------------------
-    # PERSONALITY + EMOTIONAL CONTEXT
+    # ⚡ FAST REQUEST LIMITER (PER MINUTE)
+    # -------------------------------------------------
+    if not allow_request(memory):
+        return "⏳ Too many requests. Please slow down."
+
+    # -------------------------------------------------
+    # 🧠 PERSONALITY + EMOTIONAL CONTEXT
     # -------------------------------------------------
 
     emotion = memory.get("emotional_state", "balanced")
@@ -111,19 +120,22 @@ Keep answers short, supportive, and actionable.
         return "⚠️ AI temporarily unavailable. Please try again shortly."
 
     # -------------------------------------------------
-    # REGISTER USAGE (IMPORTANT)
+    # 📊 REGISTER USAGE + COST (AFTER SUCCESS ONLY)
     # -------------------------------------------------
 
-    register_usage(memory)
-    register_ai_call(memory)
-    register_cost(memory)
-
+    register_usage(memory)      # deployment shield tracking
+    register_ai_call(memory)    # budget tracking
+    register_cost(memory)       # live cost meter
 
     # -------------------------------------------------
-    # FINAL OUTPUT SAFETY FILTER
+    # 🛡️ FINAL OUTPUT SAFETY FILTER
     # -------------------------------------------------
 
-    unsafe_words = ["diagnosis", "you have", "take this prescription"]
+    unsafe_words = [
+        "diagnosis",
+        "you have",
+        "take this prescription"
+    ]
 
     if any(word in reply.lower() for word in unsafe_words):
         reply += (
