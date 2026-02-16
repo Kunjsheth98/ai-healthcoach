@@ -234,17 +234,16 @@ with tab_dashboard:
         st.success("Check-in saved!")
 
         st.divider()
-    # -----------------------------------
+
     # ❤️ EMOTIONAL REWARD ENGINE
-    # -----------------------------------
+emotional_reward_engine(memory)
 
-    emotional_reward_engine(memory)
+if isinstance(memory.get("emotional_rewards"), list):
+    st.subheader("❤️ Today's Wins")
 
-    if memory.get("emotional_rewards"):
-        st.subheader("❤️ Today's Wins")
-
-        for reward in memory["emotional_rewards"]:
+    for reward in memory["emotional_rewards"]:
         st.success(reward)
+
 
     st.divider()
 
