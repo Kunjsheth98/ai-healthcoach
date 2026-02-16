@@ -35,6 +35,7 @@ from agents.learning_engine import learning_engine_ui
 from agents.health_vault import health_record_vault
 from agents.prescription_reader import prescription_reader_ui
 from agents.emotional_rewards import emotional_reward_engine
+from agents.identity_engine import identity_engine_ui
 
 
 # NEW INTELLIGENCE LAYERS
@@ -247,7 +248,13 @@ with tab_dashboard:
 
     st.divider()
 
+    # 🧠 IDENTITY ENGINE
+    identity_engine_ui(memory)
+
+    st.divider()
+
     health_master_brain(memory)
+
 
 # =====================================================
 # CHAT
