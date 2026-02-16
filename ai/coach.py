@@ -23,9 +23,10 @@ from core.budget_guard import (
 )
 
 from core.cost_meter import register_cost
+
+# ---------------- INDIAN FOOD INTELLIGENCE ----------------
 from agents.food_interpreter import detect_indian_food
 from agents.cooking_intelligence import calculate_indian_meal, log_meal
-
 
 
 # =====================================================
@@ -34,33 +35,35 @@ from agents.cooking_intelligence import calculate_indian_meal, log_meal
 
 def ask_health_coach(memory, message, chat_history):
 
-# -------------------------------------------------
-# 🍛 INDIAN FOOD DETECTION
-# -------------------------------------------------
-
-foods, calories = detect_indian_food(message)
-
-if foods:
-
-    memory.setdefault("daily_food_log", [])
-    memory["daily_food_log"].append({
-        "foods": foods,
-        "calories": calories
-    })
-
-    food_summary = ", ".join(
-        [f"{f['quantity']} {f['food']}" for f in foods]
-    )
-
-    message += f"\n\nUser meal detected: {food_summary} (~{calories} kcal). Give health feedback."
-
-
-    # ADMIN KILL SWITCH
+    # -------------------------------------------------
+    # 🛑 ADMIN KILL SWITCH
+    # -------------------------------------------------
     if memory.get("ai_paused", False):
         return "🛑 AI is temporarily paused by administrator."
-    
+
     # -------------------------------------------------
-    # 🛑 EMERGENCY DETECTION (FIRST PRIORITY)
+    # 🍛 INDIAN FOOD DETECTION (EARLY)
+    # -------------------------------------------------
+    foods, calories = detect_indian_food(message)
+
+    if foods:
+        memory.setdefault("daily_food_log", [])
+        memory["daily_food_log"].append({
+            "foods": foods,
+            "calories": calories
+        })
+
+        food_summary = ", ".join(
+            [f"{f['quantity']} {f['food']}" for f in foods]
+        )
+
+        message += (
+            f"\n\nUser meal detected: {food_summary} "
+            f"(~{calories} kcal). Give health feedback."
+        )
+
+    # -------------------------------------------------
+    # 🛑 EMERGENCY DETECTION
     # -------------------------------------------------
     if detect_emergency(message):
         return emergency_response()
@@ -72,34 +75,33 @@ if foods:
         return restricted_response()
 
     # -------------------------------------------------
-    # 💰 DAILY BUDGET SAFETY
+    # 💰 DAILY BUDGET CHECK
     # -------------------------------------------------
     if not check_budget(memory):
         return "🛑 Daily AI usage limit reached. Please try again tomorrow."
 
     # -------------------------------------------------
-    # ⏱️ GLOBAL RATE LIMIT (ANTI-SPAM)
+    # ⏱ GLOBAL RATE LIMIT
     # -------------------------------------------------
     allowed, reason = check_rate_limit(memory)
     if not allowed:
         return f"⛔ {reason}"
 
     # -------------------------------------------------
-    # ⚡ FAST REQUEST LIMITER (PER MINUTE)
+    # ⚡ FAST REQUEST LIMITER
     # -------------------------------------------------
     if not allow_request(memory):
         return "⏳ Too many requests. Please slow down."
 
     # -------------------------------------------------
-    # 🧠 PERSONALITY + EMOTIONAL CONTEXT
+    # 🧠 PERSONALITY CONTEXT
     # -------------------------------------------------
-
     emotion = memory.get("emotional_state", "balanced")
     personality_type = memory.get("personality_type", "adaptive")
     long_term_summary = memory.get("long_term_summary", "")
 
     system_prompt = f"""
-You are an Indian AI Health Coach focused on wellness guidance.
+You are an Indian AI Health Coach focused on lifestyle wellness.
 
 User personality type: {personality_type}
 User emotional state: {emotion}
@@ -107,41 +109,37 @@ User emotional state: {emotion}
 Health score: {memory.get('health_score', 50)}
 Health goal: {memory.get('health_goals', 'general fitness')}
 
-Long-term user profile:
+Long-term profile:
 {long_term_summary}
 
 STRICT RULES:
 - Never diagnose diseases
 - Never prescribe medicines
 - Never change medication dosage
-- Provide only lifestyle and wellness guidance
-- Encourage doctor consultation for medical concerns
+- Give lifestyle guidance only
+- Encourage doctor consultation when needed
 
 Keep answers short, supportive, and actionable.
 """
 
     # -------------------------------------------------
-    # BUILD MESSAGE HISTORY
+    # BUILD CHAT HISTORY
     # -------------------------------------------------
-
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(chat_history)
     messages.append({"role": "user", "content": message})
 
     # -------------------------------------------------
-    # 🍛 INDIAN FOOD INTELLIGENCE
+    # 🍛 COOKING STYLE INTELLIGENCE
     # -------------------------------------------------
-
     foods, calories = calculate_indian_meal(memory, message)
 
     if foods:
         log_meal(memory, foods, calories)
 
-
     # -------------------------------------------------
     # 🤖 OPENAI CALL
     # -------------------------------------------------
-
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -154,17 +152,15 @@ Keep answers short, supportive, and actionable.
         return "⚠️ AI temporarily unavailable. Please try again shortly."
 
     # -------------------------------------------------
-    # 📊 REGISTER USAGE + COST (AFTER SUCCESS ONLY)
+    # 📊 REGISTER USAGE
     # -------------------------------------------------
-
-    register_usage(memory)      # deployment shield tracking
-    register_ai_call(memory)    # budget tracking
-    register_cost(memory)       # live cost meter
+    register_usage(memory)
+    register_ai_call(memory)
+    register_cost(memory)
 
     # -------------------------------------------------
-    # 🛡️ FINAL OUTPUT SAFETY FILTER
+    # 🛡 OUTPUT SAFETY FILTER
     # -------------------------------------------------
-
     unsafe_words = [
         "diagnosis",
         "you have",
@@ -172,8 +168,6 @@ Keep answers short, supportive, and actionable.
     ]
 
     if any(word in reply.lower() for word in unsafe_words):
-        reply += (
-            "\n\n⚠️ This is general wellness guidance and not medical advice."
-        )
+        reply += "\n\n⚠️ This is general wellness guidance and not medical advice."
 
     return reply
