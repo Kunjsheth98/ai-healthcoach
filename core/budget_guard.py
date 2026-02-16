@@ -1,18 +1,20 @@
 import time
+from datetime import datetime
 from core.memory import save_memory
 
-# -----------------------------------
-# CONFIG
-# -----------------------------------
 
-MAX_DAILY_AI_CALLS = 120      # request limit
-DAILY_COST_LIMIT = 3.0        # USD safety budget
-MAX_REQUESTS_PER_MINUTE = 10  # spam protection
+# =====================================================
+# CONFIGURATION
+# =====================================================
+
+MAX_DAILY_AI_CALLS = 120       # max AI calls per day
+DAILY_COST_LIMIT = 3.0         # default daily budget (USD)
+MAX_REQUESTS_PER_MINUTE = 10   # anti-spam protection
 
 
-# -----------------------------------
-# INIT
-# -----------------------------------
+# =====================================================
+# INITIALIZE MEMORY STRUCTURE
+# =====================================================
 
 def init_budget(memory):
 
@@ -23,19 +25,51 @@ def init_budget(memory):
             "request_times": []
         }
 
+    if "ai_paused" not in memory:
+        memory["ai_paused"] = False
 
-# -----------------------------------
-# CALL LIMIT CHECK
-# -----------------------------------
+    if "last_reset_date" not in memory:
+        memory["last_reset_date"] = datetime.utcnow().date().isoformat()
 
-def check_budget(memory):
+
+# =====================================================
+# DAILY AUTO RESET SYSTEM
+# =====================================================
+
+def daily_reset(memory):
 
     init_budget(memory)
 
-    # Admin custom limit (fallback = default)
+    today = datetime.utcnow().date().isoformat()
+
+    # If new day → reset everything
+    if memory["last_reset_date"] != today:
+
+        memory["last_reset_date"] = today
+
+        memory["budget"]["ai_calls_today"] = 0
+        memory["budget"]["daily_cost"] = 0.0
+        memory["budget"]["request_times"] = []
+
+        # Auto resume AI next day
+        memory["ai_paused"] = False
+
+        save_memory(memory)
+
+
+# =====================================================
+# BUDGET + LIMIT CHECK
+# =====================================================
+
+def check_budget(memory):
+
+    daily_reset(memory)
+    init_budget(memory)
+
+    # Admin custom limit (fallback default)
     admin_limit = memory.get("admin_budget_limit", DAILY_COST_LIMIT)
 
-    # Auto shutdown when budget reached
+    # Auto shutdown when cost reached
     if memory["budget"]["daily_cost"] >= admin_limit:
         memory["ai_paused"] = True
         save_memory(memory)
@@ -45,13 +79,16 @@ def check_budget(memory):
     if memory["budget"]["ai_calls_today"] >= MAX_DAILY_AI_CALLS:
         return False
 
+    # Manual admin pause
+    if memory.get("ai_paused", False):
+        return False
+
     return True
 
 
-
-# -----------------------------------
-# REGISTER AI CALL
-# -----------------------------------
+# =====================================================
+# REGISTER AI CALL + COST
+# =====================================================
 
 def register_ai_call(memory, estimated_cost=0.002):
 
@@ -63,9 +100,9 @@ def register_ai_call(memory, estimated_cost=0.002):
     save_memory(memory)
 
 
-# -----------------------------------
-# RATE LIMITER
-# -----------------------------------
+# =====================================================
+# RATE LIMITER (ANTI SPAM)
+# =====================================================
 
 def allow_request(memory):
 
@@ -73,6 +110,7 @@ def allow_request(memory):
 
     now = time.time()
 
+    # keep only last 60 seconds
     memory["budget"]["request_times"] = [
         t for t in memory["budget"]["request_times"]
         if now - t < 60
@@ -87,10 +125,11 @@ def allow_request(memory):
     return True
 
 
-# -----------------------------------
-# GET COST
-# -----------------------------------
+# =====================================================
+# COST DISPLAY HELPER
+# =====================================================
 
 def get_today_cost(memory):
+
     init_budget(memory)
     return memory["budget"]["daily_cost"]

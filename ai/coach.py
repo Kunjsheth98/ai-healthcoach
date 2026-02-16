@@ -23,6 +23,7 @@ from core.budget_guard import (
 )
 
 from core.cost_meter import register_cost
+from agents.food_interpreter import detect_indian_food
 
 
 # =====================================================
@@ -30,6 +31,27 @@ from core.cost_meter import register_cost
 # =====================================================
 
 def ask_health_coach(memory, message, chat_history):
+
+# -------------------------------------------------
+# 🍛 INDIAN FOOD DETECTION
+# -------------------------------------------------
+
+foods, calories = detect_indian_food(message)
+
+if foods:
+
+    memory.setdefault("daily_food_log", [])
+    memory["daily_food_log"].append({
+        "foods": foods,
+        "calories": calories
+    })
+
+    food_summary = ", ".join(
+        [f"{f['quantity']} {f['food']}" for f in foods]
+    )
+
+    message += f"\n\nUser meal detected: {food_summary} (~{calories} kcal). Give health feedback."
+
 
     # ADMIN KILL SWITCH
     if memory.get("ai_paused", False):

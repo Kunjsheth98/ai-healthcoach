@@ -147,12 +147,27 @@ with tab_dashboard:
 
     st.subheader("Today's Overview")
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
 
-    c1.metric("Health Score", memory["health_score"])
-    c2.metric("Water", memory["water_intake"])
-    c3.metric("Energy", memory["energy_level"])
-    c4.metric("Sleep", memory["sleep_hours"])
+    c1.metric("🧠 Health Score", memory.get("health_score", 50))
+    c2.metric("💧 Water", memory.get("water_intake", 0))
+    c3.metric("⚡ Energy", memory.get("energy_level", 5))
+    c4.metric("😴 Sleep", memory.get("sleep_hours", 0))
+
+# -----------------------------------
+# 🍛 FOOD CALORIES TODAY
+# -----------------------------------
+    memory.setdefault("daily_food_log", [])
+    food_calories_today = 0
+
+    if memory.get("daily_food_log"):
+        food_calories_today = sum(
+            (entry.get("calories") or 0)
+            for entry in memory["daily_food_log"]
+        )
+
+    c5.metric("🍛 Food Calories", food_calories_today)
+
 
     gamification_ui(memory)
     morning_briefing_ui(memory)
