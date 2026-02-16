@@ -24,6 +24,8 @@ from core.budget_guard import (
 
 from core.cost_meter import register_cost
 from agents.food_interpreter import detect_indian_food
+from agents.cooking_intelligence import calculate_indian_meal, log_meal
+
 
 
 # =====================================================
@@ -125,6 +127,16 @@ Keep answers short, supportive, and actionable.
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(chat_history)
     messages.append({"role": "user", "content": message})
+
+    # -------------------------------------------------
+    # 🍛 INDIAN FOOD INTELLIGENCE
+    # -------------------------------------------------
+
+    foods, calories = calculate_indian_meal(memory, message)
+
+    if foods:
+        log_meal(memory, foods, calories)
+
 
     # -------------------------------------------------
     # 🤖 OPENAI CALL

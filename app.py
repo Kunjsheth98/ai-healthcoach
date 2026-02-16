@@ -12,7 +12,7 @@ from core.chat_manager import list_chats, load_chat, save_chat
 # ================= SUBSCRIPTION =================
 from core.subscription import has_premium_access, premium_lock
 
-# ================= COST METER =================
+# ================= COST =================
 from core.cost_meter import get_cost_summary
 
 # ================= AGENTS =================
@@ -34,11 +34,17 @@ from agents.learning_engine import learning_engine_ui
 
 from agents.health_vault import health_record_vault
 from agents.prescription_reader import prescription_reader_ui
+from agents.emotional_rewards import emotional_reward_engine
+
+
+# NEW INTELLIGENCE LAYERS
+from agents.nutritionist_brain import nutritionist_brain
+from agents.metabolic_predictor import metabolic_predictor
+from agents.behavior_brain import behavior_brain
 
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
 from admin.control_center import admin_control_center
-
 
 # ================= AI =================
 from ai.coach import ask_health_coach
@@ -105,10 +111,10 @@ st.title("🩺 AI HealthCoach")
 st.caption(f"Logged in as: {st.session_state.user}")
 
 # =====================================================
-# ADMIN CONTROL
+# ADMIN USERS
 # =====================================================
 
-ADMIN_USERS = ["demo"]  # change later
+ADMIN_USERS = ["demo"]
 
 tabs = ["🏠 Dashboard", "💬 Coach", "📊 Insights", "🧭 Planner", "🗂️ Records"]
 
@@ -117,17 +123,13 @@ if st.session_state.user in ADMIN_USERS:
 
 all_tabs = st.tabs(tabs)
 
-tab_dashboard = all_tabs[0]
-tab_chat = all_tabs[1]
-tab_insights = all_tabs[2]
-tab_planner = all_tabs[3]
-tab_records = all_tabs[4]
+tab_dashboard, tab_chat, tab_insights, tab_planner, tab_records = all_tabs[:5]
 
 if st.session_state.user in ADMIN_USERS:
     tab_admin = all_tabs[5]
 
 # =====================================================
-# DASHBOARD TAB
+# DASHBOARD
 # =====================================================
 
 with tab_dashboard:
@@ -145,6 +147,7 @@ with tab_dashboard:
 
     st.divider()
 
+    # ---------------- OVERVIEW ----------------
     st.subheader("Today's Overview")
 
     c1, c2, c3, c4, c5 = st.columns(5)
@@ -154,25 +157,40 @@ with tab_dashboard:
     c3.metric("⚡ Energy", memory.get("energy_level", 5))
     c4.metric("😴 Sleep", memory.get("sleep_hours", 0))
 
-# -----------------------------------
-# 🍛 FOOD CALORIES TODAY
-# -----------------------------------
     memory.setdefault("daily_food_log", [])
-    food_calories_today = 0
 
-    if memory.get("daily_food_log"):
-        food_calories_today = sum(
-            (entry.get("calories") or 0)
-            for entry in memory["daily_food_log"]
-        )
+    food_calories_today = sum(
+        (entry.get("calories") or 0)
+        for entry in memory["daily_food_log"]
+    )
 
     c5.metric("🍛 Food Calories", food_calories_today)
 
-
+    # ---------------- DAILY LOOP ELEMENTS ----------------
     gamification_ui(memory)
     morning_briefing_ui(memory)
 
-    # ================= COST METER =================
+    # ---------------- INTELLIGENCE BRAINS ----------------
+    nutritionist_brain(memory)
+    metabolic_predictor(memory)
+    behavior_brain(memory)
+
+    if memory.get("nutrition_insights"):
+        st.subheader("🧠 AI Nutritionist Insights")
+        for i in memory["nutrition_insights"]:
+            st.info(i)
+
+    if memory.get("metabolic_alerts"):
+        st.subheader("🧬 Metabolic Health Signals")
+        for a in memory["metabolic_alerts"]:
+            st.warning(a)
+
+    if memory.get("behavior_alerts"):
+        st.subheader("🧠 Behavior Insights")
+        for b in memory["behavior_alerts"]:
+            st.warning(b)
+
+    # ---------------- COST ----------------
     requests, usd, inr = get_cost_summary(memory)
 
     st.divider()
@@ -185,18 +203,28 @@ with tab_dashboard:
 
     st.divider()
 
+    # ---------------- CHECK-IN ----------------
     st.subheader("Daily Check-In")
 
-    sleep = st.slider("Sleep Hours", 0, 12, memory["sleep_hours"])
-    energy = st.slider("Energy", 1, 10, memory["energy_level"])
-    exercise = st.checkbox("Exercise done", memory["exercise_done"])
-    water = st.number_input("Water glasses", 0, 20, memory["water_intake"])
+    sleep = st.slider("Sleep Hours", 0, 12, memory.get("sleep_hours", 6))
+    energy = st.slider("Energy", 1, 10, memory.get("energy_level", 5))
+    exercise = st.checkbox("Exercise done", memory.get("exercise_done", False))
+    water = st.number_input("Water glasses", 0, 20, memory.get("water_intake", 0))
 
     if st.button("Save Check-In"):
+
         memory["sleep_hours"] = sleep
         memory["energy_level"] = energy
         memory["exercise_done"] = exercise
         memory["water_intake"] = water
+
+        memory.setdefault("daily_health_log", [])
+        memory["daily_health_log"].append({
+            "sleep": sleep,
+            "energy": energy,
+            "water": water,
+            "exercise": exercise
+        })
 
         calculate_health_score(memory)
         update_streak(memory)
@@ -204,13 +232,25 @@ with tab_dashboard:
 
         st.success("Check-in saved!")
 
+        st.divider()
+    # -----------------------------------
+    # ❤️ EMOTIONAL REWARD ENGINE
+    # -----------------------------------
+
+    emotional_reward_engine(memory)
+
+    if memory.get("emotional_rewards"):
+        st.subheader("❤️ Today's Wins")
+
+        for reward in memory["emotional_rewards"]:
+        st.success(reward)
+
     st.divider()
 
-    # 🧠 MASTER AI OPERATING SYSTEM
     health_master_brain(memory)
 
 # =====================================================
-# CHAT TAB
+# CHAT
 # =====================================================
 
 with tab_chat:
@@ -237,16 +277,13 @@ with tab_chat:
 
     if user_msg:
         messages.append({"role": "user", "content": user_msg})
-
         reply = ask_health_coach(memory, user_msg, messages)
-
         messages.append({"role": "assistant", "content": reply})
-
         save_chat(chat_name, messages)
         st.rerun()
 
 # =====================================================
-# INSIGHTS TAB
+# INSIGHTS
 # =====================================================
 
 with tab_insights:
@@ -256,7 +293,6 @@ with tab_insights:
     habit_insight_ui(memory)
     emotional_feedback_ui(memory)
     personality_display_ui(memory)
-
     learning_engine_ui(memory)
 
     if has_premium_access("weekly_story"):
@@ -266,7 +302,7 @@ with tab_insights:
         premium_lock()
 
 # =====================================================
-# PLANNER TAB
+# PLANNER
 # =====================================================
 
 with tab_planner:
@@ -286,7 +322,7 @@ with tab_planner:
         premium_lock()
 
 # =====================================================
-# RECORDS TAB
+# RECORDS
 # =====================================================
 
 with tab_records:
@@ -295,7 +331,7 @@ with tab_records:
     prescription_reader_ui(memory)
 
 # =====================================================
-# ADMIN TAB
+# ADMIN
 # =====================================================
 
 if st.session_state.user in ADMIN_USERS:
@@ -303,7 +339,6 @@ if st.session_state.user in ADMIN_USERS:
         admin_dashboard()
         st.divider()
         admin_control_center(memory)
-
 
 # =====================================================
 # SAVE MEMORY
