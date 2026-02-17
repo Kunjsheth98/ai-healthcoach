@@ -218,12 +218,11 @@ with tab_dashboard:
         progress_ring(memory.get("energy_level",5),10,"Energy")
 
 
-    gamification_ui(memory)
-    morning_briefing_ui(memory)
-
-    nutritionist_brain(memory)
-    metabolic_predictor(memory)
-    behavior_brain(memory)
+    #gamification_ui(memory)
+    #morning_briefing_ui(memory)
+    #nutritionist_brain(memory)
+    #metabolic_predictor(memory)
+    #behavior_brain(memory)
 
     if memory.get("nutrition_insights"):
         st.subheader("🧠 AI Nutritionist Insights")
