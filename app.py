@@ -144,6 +144,19 @@ with tab_dashboard:
         </div>
     """, unsafe_allow_html=True)
 
+    st.markdown(f"""
+        <div style="
+        padding:20px;
+        border-radius:15px;
+        background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+        color:white;
+        margin-bottom:15px;">
+        <h2>👩‍⚕️ Asha — Your AI Health Coach</h2>
+        <p>Online • Learning from you daily</p>
+        <h3>Health Score: {memory.get("health_score",50)}</h3>
+        </div>
+        """, unsafe_allow_html=True)
+
 
     st.subheader("📱 WhatsApp Notifications")
 
