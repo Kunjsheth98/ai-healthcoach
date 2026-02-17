@@ -1,5 +1,4 @@
 import streamlit as st
-import math
 
 # ================= AUTH =================
 from core.auth import register_user, login_user
@@ -39,7 +38,7 @@ from agents.prescription_reader import prescription_reader_ui
 from agents.emotional_rewards import emotional_reward_engine
 from agents.identity_engine import identity_engine_ui
 
-# Intelligence Layers
+# ===== Intelligence Layers =====
 from agents.nutritionist_brain import nutritionist_brain
 from agents.metabolic_predictor import metabolic_predictor
 from agents.behavior_brain import behavior_brain
@@ -134,39 +133,72 @@ with tab_dashboard:
     st.subheader("👩‍⚕️ Asha — Your AI Health Coach")
     st.caption("Online • Learning from you daily")
 
-    # Overview metrics
-    c1, c2, c3, c4 = st.columns(4)
+    # ===== WhatsApp =====
+    st.subheader("📱 WhatsApp Notifications")
+
+    phone = st.text_input(
+        "Enter WhatsApp number",
+        value=memory.get("phone_number", "")
+    )
+
+    if st.button("Save Number"):
+        memory["phone_number"] = phone
+        st.success("Number saved!")
+
+    st.divider()
+
+    # ===== Overview =====
+    c1, c2, c3, c4, c5 = st.columns(5)
 
     c1.metric("Health Score", memory.get("health_score", 50))
     c2.metric("Water", memory.get("water_intake", 0))
     c3.metric("Energy", memory.get("energy_level", 5))
     c4.metric("Sleep", memory.get("sleep_hours", 0))
 
+    memory.setdefault("daily_food_log", [])
+    food_calories_today = sum(
+        (entry.get("calories") or 0)
+        for entry in memory["daily_food_log"]
+    )
+
+    c5.metric("Food Calories", food_calories_today)
+
+    # ===== Gamification + Briefing =====
+    gamification_ui(memory)
+    morning_briefing_ui(memory)
+
     st.divider()
 
-    # Intelligence Engines
+    # ===== Intelligence Engines =====
     nutritionist_brain(memory)
     metabolic_predictor(memory)
     behavior_brain(memory)
 
     if memory.get("nutrition_insights"):
-        st.subheader("🧠 AI Nutritionist Insights")
         for i in memory["nutrition_insights"]:
             st.info(i)
 
     if memory.get("metabolic_alerts"):
-        st.subheader("🧬 Metabolic Health Signals")
         for a in memory["metabolic_alerts"]:
             st.warning(a)
 
     if memory.get("behavior_alerts"):
-        st.subheader("🧠 Behavior Insights")
         for b in memory["behavior_alerts"]:
             st.warning(b)
 
     st.divider()
 
-    # Daily Check-In
+    # ===== COST METER =====
+    requests, usd, inr = get_cost_summary(memory)
+
+    cc1, cc2, cc3 = st.columns(3)
+    cc1.metric("Requests Used", requests)
+    cc2.metric("USD Spent", f"${usd}")
+    cc3.metric("Estimated Cost", f"₹{inr}")
+
+    st.divider()
+
+    # ===== Daily Check-In =====
     st.subheader("Daily Check-In")
 
     sleep = st.slider("Sleep Hours", 0, 12, memory.get("sleep_hours", 6))
@@ -197,7 +229,7 @@ with tab_dashboard:
 
     st.divider()
 
-    # Emotional Rewards
+    # ===== Emotional Rewards =====
     emotional_reward_engine(memory)
 
     if isinstance(memory.get("emotional_rewards"), list):
@@ -207,13 +239,14 @@ with tab_dashboard:
 
     st.divider()
 
-    # Identity Engine
+    # ===== Identity Engine =====
     identity_engine_ui(memory)
 
     st.divider()
 
-    # Master Brain
+    # ===== Master Brain =====
     health_master_brain(memory)
+
 
 # =====================================================
 # CHAT
