@@ -196,12 +196,12 @@ with tab_dashboard:
             width:120px;height:120px;border-radius:50%;
             background:conic-gradient(#22c55e {angle}deg,#1f2937 {angle}deg);
             display:flex;align-items:center;justify-content:center;margin:auto;">
-            <div style="
-                width:85px;height:85px;background:#0b0f19;
-                border-radius:50%;display:flex;
-                align-items:center;justify-content:center;color:white;">
-                {int(percent*100)}%
-            </div>
+        <div style="
+            width:85px;height:85px;background:#0b0f19;
+            border-radius:50%;display:flex;
+            align-items:center;justify-content:center;color:white;">
+            {int(percent*100)}%
+        </div>
         </div>
         <p style="text-align:center">{label}</p>
         """, unsafe_allow_html=True)
@@ -303,7 +303,7 @@ with tab_chat:
     chats = list_chats()
     chat_name = st.selectbox("Select Chat", chats if chats else ["default"])
 
-    messages = load_chat(chat_name)
+    messages = load_chat(chat_name) or []
 
     for m in messages:
         st.chat_message(m["role"]).write(m["content"])
