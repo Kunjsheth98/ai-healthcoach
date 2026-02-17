@@ -311,8 +311,8 @@ with tab_chat:
     user_msg = st.chat_input("Ask your coach...")
 
     if user_msg:
+        reply = ask_health_coach(memory, user_msg, messages.copy())
         messages.append({"role": "user", "content": user_msg})
-        reply = ask_health_coach(memory, user_msg, messages)
         messages.append({"role": "assistant", "content": reply})
         save_chat(chat_name, messages)
         st.rerun()
