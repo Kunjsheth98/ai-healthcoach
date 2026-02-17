@@ -192,19 +192,19 @@ with tab_dashboard:
         angle = percent*360
 
         st.markdown(f"""
-        <div style="
-            width:120px;height:120px;border-radius:50%;
-            background:conic-gradient(#22c55e {angle}deg,#1f2937 {angle}deg);
-            display:flex;align-items:center;justify-content:center;margin:auto;">
-        <div style="
-            width:85px;height:85px;background:#0b0f19;
-            border-radius:50%;display:flex;
-            align-items:center;justify-content:center;color:white;">
-            {int(percent*100)}%
-        </div>
-        </div>
-        <p style="text-align:center">{label}</p>
-        """, unsafe_allow_html=True)
+            <div style="
+                width:120px;height:120px;border-radius:50%;
+                background:conic-gradient(#22c55e {angle}deg,#1f2937 {angle}deg);
+                display:flex;align-items:center;justify-content:center;margin:auto;">
+            <div style="
+                width:85px;height:85px;background:#0b0f19;
+                border-radius:50%;display:flex;
+                align-items:center;justify-content:center;color:white;">
+                {int(percent*100)}%
+            </div>
+            </div>
+            <p style="text-align:center">{label}</p>
+            """, unsafe_allow_html=True)
 
     r1,r2,r3 = st.columns(3)
 
@@ -218,11 +218,11 @@ with tab_dashboard:
         progress_ring(memory.get("energy_level",5),10,"Energy")
 
 
-    #gamification_ui(memory)
-    #morning_briefing_ui(memory)
-    #nutritionist_brain(memory)
-    #metabolic_predictor(memory)
-    #behavior_brain(memory)
+    gamification_ui(memory)
+    morning_briefing_ui(memory)
+    nutritionist_brain(memory)
+    metabolic_predictor(memory)
+    behavior_brain(memory)
 
     if memory.get("nutrition_insights"):
         st.subheader("🧠 AI Nutritionist Insights")
