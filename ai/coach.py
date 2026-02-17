@@ -1,10 +1,5 @@
-# =====================================================
-# AI HEALTH COACH (ASHA — PRODUCTION VERSION)
-# =====================================================
-
 from core.config import client
 
-# ---------------- SAFETY GUARDRAILS ----------------
 from core.medical_guardrails import (
     detect_emergency,
     detect_restricted_request,
@@ -12,159 +7,92 @@ from core.medical_guardrails import (
     restricted_response,
 )
 
-# ---------------- RATE LIMIT SHIELD ----------------
 from core.deployment_shield import check_rate_limit, register_usage
-
-# ---------------- BUDGET + COST CONTROL ----------------
-from core.budget_guard import (
-    check_budget,
-    register_ai_call,
-    allow_request
-)
-
+from core.budget_guard import check_budget, register_ai_call, allow_request
 from core.cost_meter import register_cost
 
-# ---------------- ASHA PERSONALITY ----------------
-from agents.asha_memory import (
-    update_asha_memory,
-    get_asha_personality_prompt
-)
-
-# ---------------- INDIAN FOOD INTELLIGENCE ----------------
 from agents.food_interpreter import detect_indian_food
 from agents.cooking_intelligence import calculate_indian_meal, log_meal
+from agents.asha_memory import update_asha_memory
 
-
-# =====================================================
-# MAIN AI FUNCTION
-# =====================================================
 
 def ask_health_coach(memory, message, chat_history):
 
-    # -------------------------------------------------
-    # 🧠 UPDATE ASHA MEMORY PROFILE
-    # -------------------------------------------------
-    update_asha_memory(memory)
-
-    # -------------------------------------------------
-    # 🍛 INDIAN FOOD DETECTION
-    # -------------------------------------------------
+    # ================= FOOD DETECTION =================
     foods, calories = detect_indian_food(message)
 
     if foods:
         memory.setdefault("daily_food_log", [])
-        memory["daily_food_log"].append({
-            "foods": foods,
-            "calories": calories
-        })
+        memory["daily_food_log"].append(
+            {"foods": foods, "calories": calories}
+        )
 
-        food_summary = ", ".join(
+        summary = ", ".join(
             [f"{f['quantity']} {f['food']}" for f in foods]
         )
 
-        message += (
-            f"\n\nUser meal detected: {food_summary}"
-            f" (~{calories} kcal). Give health feedback."
-        )
+        message += f"\nUser meal detected: {summary} (~{calories} kcal). Give feedback."
 
-    # -------------------------------------------------
-    # ADMIN KILL SWITCH
-    # -------------------------------------------------
-    if memory.get("ai_paused", False):
-        return "🛑 AI is temporarily paused by administrator."
+    # ================= SAFETY =================
+    if memory.get("ai_paused"):
+        return "🛑 AI temporarily paused."
 
-    # -------------------------------------------------
-    # 🛑 EMERGENCY CHECK
-    # -------------------------------------------------
     if detect_emergency(message):
         return emergency_response()
 
-    # -------------------------------------------------
-    # ⚠️ RESTRICTED REQUEST
-    # -------------------------------------------------
     if detect_restricted_request(message):
         return restricted_response()
 
-    # -------------------------------------------------
-    # 💰 BUDGET CHECK
-    # -------------------------------------------------
+    # ================= LIMITS =================
     if not check_budget(memory):
-        return "🛑 Daily AI usage limit reached. Please try again tomorrow."
+        return "🛑 Daily limit reached."
 
-    # -------------------------------------------------
-    # ⏱ RATE LIMIT
-    # -------------------------------------------------
     allowed, reason = check_rate_limit(memory)
     if not allowed:
-        return f"⛔ {reason}"
+        return reason
 
-    # -------------------------------------------------
-    # ⚡ FAST REQUEST LIMIT
-    # -------------------------------------------------
     if not allow_request(memory):
-        return "⏳ Too many requests. Please slow down."
+        return "⏳ Slow down."
 
-    # -------------------------------------------------
-    # 🧠 ASHA PERSONALITY PROMPT
-    # -------------------------------------------------
-    asha_personality = get_asha_personality_prompt(memory)
+    # ================= PERSONALITY =================
+    emotion = memory.get("emotional_state", "balanced")
+    personality = memory.get("personality_type", "adaptive")
 
-    system_prompt = f"""
-{asha_personality}
+    system_prompt=f"""
+You are Asha, an Indian AI Health Coach.
 
-Health score: {memory.get('health_score', 50)}
-Health goal: {memory.get('health_goals', 'general fitness')}
+Emotion: {emotion}
+Personality: {personality}
 
-STRICT MEDICAL RULES:
-- Never diagnose diseases
-- Never prescribe medicines
-- Never change medication dosage
-- Provide lifestyle guidance only
-- Encourage doctor consultation when needed
+Rules:
+- No diagnosis
+- No medicines
+- Lifestyle guidance only
+- Keep responses short and supportive.
 """
 
-    # -------------------------------------------------
-    # BUILD CHAT HISTORY
-    # -------------------------------------------------
-    messages = [{"role": "system", "content": system_prompt}]
+    messages=[{"role":"system","content":system_prompt}]
     messages.extend(chat_history)
-    messages.append({"role": "user", "content": message})
+    messages.append({"role":"user","content":message})
 
-    # -------------------------------------------------
-    # ADVANCED FOOD INTELLIGENCE
-    # -------------------------------------------------
     foods, calories = calculate_indian_meal(memory, message)
-
     if foods:
         log_meal(memory, foods, calories)
 
-    # -------------------------------------------------
-    # 🤖 OPENAI CALL
-    # -------------------------------------------------
+    # ================= OPENAI =================
     try:
-        response = client.chat.completions.create(
+        response=client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages
         )
-
-        reply = response.choices[0].message.content
-
+        reply=response.choices[0].message.content
     except Exception:
-        return "⚠️ AI temporarily unavailable. Please try again shortly."
+        return "⚠️ AI temporarily unavailable."
 
-    # -------------------------------------------------
-    # REGISTER USAGE
-    # -------------------------------------------------
     register_usage(memory)
     register_ai_call(memory)
     register_cost(memory)
 
-    # -------------------------------------------------
-    # FINAL SAFETY FILTER
-    # -------------------------------------------------
-    unsafe_words = ["diagnosis", "you have", "take this prescription"]
-
-    if any(word in reply.lower() for word in unsafe_words):
-        reply += "\n\n⚠️ This is general wellness guidance and not medical advice."
+    update_asha_memory(memory, message, reply)
 
     return reply
