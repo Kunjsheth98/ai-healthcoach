@@ -35,11 +35,11 @@ from agents.learning_engine import learning_engine_ui
 
 from agents.health_vault import health_record_vault
 from agents.prescription_reader import prescription_reader_ui
+
 from agents.emotional_rewards import emotional_reward_engine
 from agents.identity_engine import identity_engine_ui
 
-
-# NEW INTELLIGENCE LAYERS
+# Intelligence Layers
 from agents.nutritionist_brain import nutritionist_brain
 from agents.metabolic_predictor import metabolic_predictor
 from agents.behavior_brain import behavior_brain
@@ -58,7 +58,6 @@ from dashboard.charts import show_health_chart
 # =====================================================
 # PAGE CONFIG
 # =====================================================
-
 st.set_page_config(
     page_title="AI HealthCoach",
     page_icon="🩺",
@@ -68,7 +67,6 @@ st.set_page_config(
 # =====================================================
 # LOGIN SYSTEM
 # =====================================================
-
 if "user" not in st.session_state:
     st.session_state.user = None
 
@@ -106,7 +104,6 @@ if st.session_state.user is None:
 # =====================================================
 # LOAD MEMORY
 # =====================================================
-
 memory = load_memory()
 
 st.title("🩺 AI HealthCoach")
@@ -115,7 +112,6 @@ st.caption(f"Logged in as: {st.session_state.user}")
 # =====================================================
 # ADMIN USERS
 # =====================================================
-
 ADMIN_USERS = ["demo"]
 
 tabs = ["🏠 Dashboard", "💬 Coach", "📊 Insights", "🧭 Planner", "🗂️ Records"]
@@ -133,212 +129,22 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 # DASHBOARD
 # =====================================================
-
 with tab_dashboard:
 
-    # =============================
-    # 🌅 DAILY WELCOME HERO
-    # =============================
+    st.subheader("👩‍⚕️ Asha — Your AI Health Coach")
+    st.caption("Online • Learning from you daily")
 
-    st.markdown("""
-    <style>
-    .hero {
-        padding:20px;
-        border-radius:15px;
-        background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-        color:white;
-        margin-bottom:20px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Overview metrics
+    c1, c2, c3, c4 = st.columns(4)
 
-    user_name = st.session_state.user
-    health_score = memory.get("health_score", 50)
-
-    st.markdown(f"""
-    <div class="hero">
-    <h2>👋 Welcome back, {user_name}</h2>
-    <p>Your AI Health Coach is tracking your progress daily.</p>
-    <h3>🧠 Health Score: {health_score}</h3>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # =====================================================
-    # 🤖 AI COACH PRESENCE CARD
-    # =====================================================
-
-    st.markdown("""
-    <style>
-    .coach-card{
-        padding:18px;
-        border-radius:14px;
-        background:#111827;
-        color:white;
-        margin-bottom:15px;
-    }
-    .small-text{color:#9ca3af;font-size:14px;}
-    </style>
-    """, unsafe_allow_html=True)
-
-    emotion = memory.get("emotional_state", "balanced")
-
-    status_map = {
-        "balanced": "You are stable today.",
-        "struggling": "I'm keeping things gentle today.",
-        "winning": "You're doing amazing lately 🔥",
-        "challenger": "Let's push your limits today."
-    }
-
-    st.markdown(f"""
-    <div class="coach-card">
-    <h3>👩‍⚕️ Asha — Your AI Health Coach</h3>
-    <p class="small-text">Online • Learning from you daily</p>
-    <p>{status_map.get(emotion)}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-
-    # =====================================================
-    # 🎯 DAILY MISSION GENERATOR
-    # =====================================================
-
-    st.subheader("🎯 Today's Mission")
-
-    missions = []
-
-    if memory.get("water_intake", 0) < 8:
-        missions.append("💧 Drink 2 more glasses of water")
-
-    if memory.get("sleep_hours", 0) < 7:
-        missions.append("😴 Sleep at least 7 hours tonight")
-
-    if not memory.get("exercise_done", False):
-        missions.append("🚶 Take a 10-minute walk")
-
-    if memory.get("energy_level", 5) <= 4:
-        missions.append("🧘 Do light stretching or breathing")
-
-    if not missions:
-        missions.append("🔥 Maintain your healthy routine today!")
-
-    for m in missions:
-        st.info(m)
-
-
-    # =====================================================
-    # 🔥 STREAK FLAME UI
-    # =====================================================
-
-    st.subheader("🔥 Consistency Streak")
-
-    streak = memory.get("streak_days", 0)
-
-    flames = "🔥" * min(streak, 10)
-
-    st.markdown(f"""
-    ### {flames}
-    You are on a **{streak}-day streak**
-    """)
-
-    if streak >= 7:
-        st.success("Consistency level: Strong Habit Formation")
-
-
-    # =====================================================
-    # 🍎 APPLE-STYLE PROGRESS RINGS
-    # =====================================================
-
-    st.subheader("📊 Daily Progress")
-
-    sleep = memory.get("sleep_hours", 0)
-    water = memory.get("water_intake", 0)
-    energy = memory.get("energy_level", 5)
-
-    def progress_ring(value, max_value, label):
-
-        percent = min(value / max_value, 1)
-        angle = percent * 360
-
-        st.markdown(f"""
-        <div style="
-            width:120px;
-            height:120px;
-            border-radius:50%;
-            background:conic-gradient(
-                #22c55e {angle}deg,
-                #1f2937 {angle}deg
-            );
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            margin:auto;">
-            <div style="
-                width:85px;
-                height:85px;
-                background:#0b0f19;
-                border-radius:50%;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                color:white;
-                font-weight:bold;">
-                {int(percent*100)}%
-            </div>
-        </div>
-        <p style="text-align:center">{label}</p>
-        """, unsafe_allow_html=True)
-
-
-    r1, r2, r3 = st.columns(3)
-
-    with r1:
-        progress_ring(sleep, 8, "Sleep")
-
-    with r2:
-        progress_ring(water, 8, "Hydration")
-
-    with r3:
-        progress_ring(energy, 10, "Energy")
-
-
-
-    st.subheader("📱 WhatsApp Notifications")
-
-    phone = st.text_input(
-        "Enter WhatsApp number",
-        value=memory.get("phone_number", "")
-    )
-
-    if st.button("Save Number"):
-        memory["phone_number"] = phone
-        st.success("Number saved!")
+    c1.metric("Health Score", memory.get("health_score", 50))
+    c2.metric("Water", memory.get("water_intake", 0))
+    c3.metric("Energy", memory.get("energy_level", 5))
+    c4.metric("Sleep", memory.get("sleep_hours", 0))
 
     st.divider()
 
-    # ---------------- OVERVIEW ----------------
-    st.subheader("Today's Overview")
-
-    c1, c2, c3, c4, c5 = st.columns(5)
-
-    c1.metric("🧠 Health Score", memory.get("health_score", 50))
-    c2.metric("💧 Water", memory.get("water_intake", 0))
-    c3.metric("⚡ Energy", memory.get("energy_level", 5))
-    c4.metric("😴 Sleep", memory.get("sleep_hours", 0))
-
-    memory.setdefault("daily_food_log", [])
-
-    food_calories_today = sum(
-        (entry.get("calories") or 0)
-        for entry in memory["daily_food_log"]
-    )
-
-    c5.metric("🍛 Food Calories", food_calories_today)
-
-    # ---------------- DAILY LOOP ELEMENTS ----------------
-    gamification_ui(memory)
-    morning_briefing_ui(memory)
-
-    # ---------------- INTELLIGENCE BRAINS ----------------
+    # Intelligence Engines
     nutritionist_brain(memory)
     metabolic_predictor(memory)
     behavior_brain(memory)
@@ -358,20 +164,9 @@ with tab_dashboard:
         for b in memory["behavior_alerts"]:
             st.warning(b)
 
-    # ---------------- COST ----------------
-    requests, usd, inr = get_cost_summary(memory)
-
-    st.divider()
-    st.subheader("💰 AI Usage Today")
-
-    cc1, cc2, cc3 = st.columns(3)
-    cc1.metric("Requests Used", requests)
-    cc2.metric("USD Spent", f"${usd}")
-    cc3.metric("Estimated Cost", f"₹{inr}")
-
     st.divider()
 
-    # ---------------- CHECK-IN ----------------
+    # Daily Check-In
     st.subheader("Daily Check-In")
 
     sleep = st.slider("Sleep Hours", 0, 12, memory.get("sleep_hours", 6))
@@ -400,32 +195,29 @@ with tab_dashboard:
 
         st.success("Check-in saved!")
 
-        st.divider()
+    st.divider()
 
-    # ❤️ EMOTIONAL REWARD ENGINE
-emotional_reward_engine(memory)
+    # Emotional Rewards
+    emotional_reward_engine(memory)
 
-if isinstance(memory.get("emotional_rewards"), list):
-    st.subheader("❤️ Today's Wins")
-
-    for reward in memory["emotional_rewards"]:
-        st.success(reward)
-
+    if isinstance(memory.get("emotional_rewards"), list):
+        st.subheader("❤️ Today's Wins")
+        for reward in memory["emotional_rewards"]:
+            st.success(reward)
 
     st.divider()
 
-    # 🧠 IDENTITY ENGINE
+    # Identity Engine
     identity_engine_ui(memory)
 
     st.divider()
 
+    # Master Brain
     health_master_brain(memory)
-
 
 # =====================================================
 # CHAT
 # =====================================================
-
 with tab_chat:
 
     chats = list_chats()
@@ -435,18 +227,12 @@ with tab_chat:
         chats if chats else ["default"]
     )
 
-    new_chat = st.text_input("Create new chat")
-
-    if st.button("Create Chat") and new_chat:
-        save_chat(new_chat, [])
-        st.rerun()
-
     messages = load_chat(chat_name)
 
     for m in messages:
         st.chat_message(m["role"]).write(m["content"])
 
-    user_msg = st.chat_input("Ask your coach...")
+    user_msg = st.chat_input("Ask Asha...")
 
     if user_msg:
         messages.append({"role": "user", "content": user_msg})
@@ -458,7 +244,6 @@ with tab_chat:
 # =====================================================
 # INSIGHTS
 # =====================================================
-
 with tab_insights:
 
     show_health_chart(memory)
@@ -477,7 +262,6 @@ with tab_insights:
 # =====================================================
 # PLANNER
 # =====================================================
-
 with tab_planner:
 
     autonomous_planner_agent(memory)
@@ -497,7 +281,6 @@ with tab_planner:
 # =====================================================
 # RECORDS
 # =====================================================
-
 with tab_records:
     health_record_vault()
     st.divider()
@@ -506,7 +289,6 @@ with tab_records:
 # =====================================================
 # ADMIN
 # =====================================================
-
 if st.session_state.user in ADMIN_USERS:
     with tab_admin:
         admin_dashboard()
@@ -516,5 +298,4 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 # SAVE MEMORY
 # =====================================================
-
 save_memory(memory)

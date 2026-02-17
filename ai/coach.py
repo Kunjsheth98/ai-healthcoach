@@ -1,5 +1,5 @@
 # =====================================================
-# AI HEALTH COACH (SAFE + PRODUCTION VERSION)
+# AI HEALTH COACH (ASHA — PRODUCTION VERSION)
 # =====================================================
 
 from core.config import client
@@ -24,6 +24,12 @@ from core.budget_guard import (
 
 from core.cost_meter import register_cost
 
+# ---------------- ASHA PERSONALITY ----------------
+from agents.asha_memory import (
+    update_asha_memory,
+    get_asha_personality_prompt
+)
+
 # ---------------- INDIAN FOOD INTELLIGENCE ----------------
 from agents.food_interpreter import detect_indian_food
 from agents.cooking_intelligence import calculate_indian_meal, log_meal
@@ -36,13 +42,12 @@ from agents.cooking_intelligence import calculate_indian_meal, log_meal
 def ask_health_coach(memory, message, chat_history):
 
     # -------------------------------------------------
-    # 🛑 ADMIN KILL SWITCH
+    # 🧠 UPDATE ASHA MEMORY PROFILE
     # -------------------------------------------------
-    if memory.get("ai_paused", False):
-        return "🛑 AI is temporarily paused by administrator."
+    update_asha_memory(memory)
 
     # -------------------------------------------------
-    # 🍛 INDIAN FOOD DETECTION (EARLY)
+    # 🍛 INDIAN FOOD DETECTION
     # -------------------------------------------------
     foods, calories = detect_indian_food(message)
 
@@ -58,68 +63,64 @@ def ask_health_coach(memory, message, chat_history):
         )
 
         message += (
-            f"\n\nUser meal detected: {food_summary} "
-            f"(~{calories} kcal). Give health feedback."
+            f"\n\nUser meal detected: {food_summary}"
+            f" (~{calories} kcal). Give health feedback."
         )
 
     # -------------------------------------------------
-    # 🛑 EMERGENCY DETECTION
+    # ADMIN KILL SWITCH
+    # -------------------------------------------------
+    if memory.get("ai_paused", False):
+        return "🛑 AI is temporarily paused by administrator."
+
+    # -------------------------------------------------
+    # 🛑 EMERGENCY CHECK
     # -------------------------------------------------
     if detect_emergency(message):
         return emergency_response()
 
     # -------------------------------------------------
-    # ⚠️ RESTRICTED MEDICAL REQUEST
+    # ⚠️ RESTRICTED REQUEST
     # -------------------------------------------------
     if detect_restricted_request(message):
         return restricted_response()
 
     # -------------------------------------------------
-    # 💰 DAILY BUDGET CHECK
+    # 💰 BUDGET CHECK
     # -------------------------------------------------
     if not check_budget(memory):
         return "🛑 Daily AI usage limit reached. Please try again tomorrow."
 
     # -------------------------------------------------
-    # ⏱ GLOBAL RATE LIMIT
+    # ⏱ RATE LIMIT
     # -------------------------------------------------
     allowed, reason = check_rate_limit(memory)
     if not allowed:
         return f"⛔ {reason}"
 
     # -------------------------------------------------
-    # ⚡ FAST REQUEST LIMITER
+    # ⚡ FAST REQUEST LIMIT
     # -------------------------------------------------
     if not allow_request(memory):
         return "⏳ Too many requests. Please slow down."
 
     # -------------------------------------------------
-    # 🧠 PERSONALITY CONTEXT
+    # 🧠 ASHA PERSONALITY PROMPT
     # -------------------------------------------------
-    emotion = memory.get("emotional_state", "balanced")
-    personality_type = memory.get("personality_type", "adaptive")
-    long_term_summary = memory.get("long_term_summary", "")
+    asha_personality = get_asha_personality_prompt(memory)
 
     system_prompt = f"""
-You are an Indian AI Health Coach focused on lifestyle wellness.
-
-User personality type: {personality_type}
-User emotional state: {emotion}
+{asha_personality}
 
 Health score: {memory.get('health_score', 50)}
 Health goal: {memory.get('health_goals', 'general fitness')}
 
-Long-term profile:
-{long_term_summary}
-
-STRICT RULES:
+STRICT MEDICAL RULES:
 - Never diagnose diseases
 - Never prescribe medicines
 - Never change medication dosage
-- Give lifestyle guidance only
+- Provide lifestyle guidance only
 - Encourage doctor consultation when needed
-
-Keep answers short, supportive, and actionable.
 """
 
     # -------------------------------------------------
@@ -130,7 +131,7 @@ Keep answers short, supportive, and actionable.
     messages.append({"role": "user", "content": message})
 
     # -------------------------------------------------
-    # 🍛 COOKING STYLE INTELLIGENCE
+    # ADVANCED FOOD INTELLIGENCE
     # -------------------------------------------------
     foods, calories = calculate_indian_meal(memory, message)
 
@@ -152,20 +153,16 @@ Keep answers short, supportive, and actionable.
         return "⚠️ AI temporarily unavailable. Please try again shortly."
 
     # -------------------------------------------------
-    # 📊 REGISTER USAGE
+    # REGISTER USAGE
     # -------------------------------------------------
     register_usage(memory)
     register_ai_call(memory)
     register_cost(memory)
 
     # -------------------------------------------------
-    # 🛡 OUTPUT SAFETY FILTER
+    # FINAL SAFETY FILTER
     # -------------------------------------------------
-    unsafe_words = [
-        "diagnosis",
-        "you have",
-        "take this prescription"
-    ]
+    unsafe_words = ["diagnosis", "you have", "take this prescription"]
 
     if any(word in reply.lower() for word in unsafe_words):
         reply += "\n\n⚠️ This is general wellness guidance and not medical advice."
