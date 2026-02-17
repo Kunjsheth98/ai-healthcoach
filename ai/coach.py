@@ -154,7 +154,7 @@ STRICT RULES:
             "Your app UI and health tracking are still working normally."
     )
 
-    return reply
+        return reply
 
     # -------------------------------------------------
     # REGISTER USAGE

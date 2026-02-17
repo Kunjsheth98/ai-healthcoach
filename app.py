@@ -301,50 +301,51 @@ with tab_dashboard:
 
 with tab_chat:
 
-    st.write("DEBUG: Coach tab started")
-
     chats = list_chats()
-    st.write("DEBUG chats:", chats)
 
     chat_name = st.selectbox(
         "Select Chat",
         chats if chats else ["default"]
     )
 
-    st.write("DEBUG selected:", chat_name)
-
+    # Safe chat loading
     try:
-        messages = load_chat(chat_name)
-        st.write("DEBUG messages loaded:", messages)
-    except Exception as e:
-        st.error(f"LOAD CHAT ERROR: {e}")
+        messages = load_chat(chat_name) or []
+    except Exception:
         messages = []
 
-    if messages is None:
-        messages = []
-
+    # Show chat history
     for m in messages:
         st.chat_message(
-            m.get("role","assistant")
-        ).write(m.get("content",""))
+            m.get("role", "assistant")
+        ).write(m.get("content", ""))
 
-    st.write("DEBUG before chat input")
-
+    # Chat input ALWAYS renders
     user_msg = st.chat_input("Ask Asha...")
 
-    st.write("DEBUG after chat input")
-
     if user_msg:
-        st.write("DEBUG message received")
 
-        reply = ask_health_coach(memory, user_msg, messages.copy())
+        try:
+            reply = ask_health_coach(
+                memory,
+                user_msg,
+                messages.copy()
+            )
+        except Exception:
+            # Offline fallback (no API billing)
+            reply = (
+                "⚠️ Asha is currently in offline mode.\n\n"
+                "AI responses are paused because API billing "
+                "is not active."
+            )
 
-        messages.append({"role":"user","content":user_msg})
-        messages.append({"role":"assistant","content":reply})
+        messages.append({"role": "user", "content": user_msg})
+        messages.append({"role": "assistant", "content": reply})
 
         save_chat(chat_name, messages)
 
         st.rerun()
+
 
 
 with tab_insights:
