@@ -137,38 +137,41 @@ STRICT RULES:
     # -------------------------------------------------
     # 🤖 OPENAI CALL
     # -------------------------------------------------
+
     try:
         response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages
-    )
-
+            model="gpt-4o-mini",
+            messages=messages
+        )
         reply = response.choices[0].message.content
 
-    except Exception as e:
-
+    except Exception:
         # OFFLINE SAFE MODE
         reply = (
             "⚠️ Asha is currently in offline mode.\n\n"
             "AI responses are paused because API billing is not active.\n"
             "Your app UI and health tracking are still working normally."
-    )
-
-        return reply
+        )
 
     # -------------------------------------------------
-    # REGISTER USAGE
+    # 📊 REGISTER USAGE + COST (ALWAYS RUN)
     # -------------------------------------------------
+
     register_usage(memory)
     register_ai_call(memory)
     register_cost(memory)
 
     # -------------------------------------------------
-    # FINAL SAFETY FILTER
+    # 🛡️ FINAL SAFETY FILTER
     # -------------------------------------------------
-    unsafe_words = ["diagnosis", "you have", "take this prescription"]
 
-    if any(w in reply.lower() for w in unsafe_words):
-        reply += "\n\n⚠️ This is general wellness guidance."
+    unsafe_words = [
+        "diagnosis",
+        "you have",
+        "take this prescription"
+    ]
+
+    if any(word in reply.lower() for word in unsafe_words):
+        reply += "\n\n⚠️ This is general wellness guidance, not medical advice."
 
     return reply
