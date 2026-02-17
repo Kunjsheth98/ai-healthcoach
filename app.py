@@ -300,22 +300,52 @@ with tab_dashboard:
 # (UNCHANGED — EXACT SAME AS YOUR VERSION)
 
 with tab_chat:
-    chats = list_chats()
-    chat_name = st.selectbox("Select Chat", chats if chats else ["default"])
 
-    messages = load_chat(chat_name) or []
+    st.write("DEBUG: Coach tab started")
+
+    chats = list_chats()
+    st.write("DEBUG chats:", chats)
+
+    chat_name = st.selectbox(
+        "Select Chat",
+        chats if chats else ["default"]
+    )
+
+    st.write("DEBUG selected:", chat_name)
+
+    try:
+        messages = load_chat(chat_name)
+        st.write("DEBUG messages loaded:", messages)
+    except Exception as e:
+        st.error(f"LOAD CHAT ERROR: {e}")
+        messages = []
+
+    if messages is None:
+        messages = []
 
     for m in messages:
-        st.chat_message(m["role"]).write(m["content"])
+        st.chat_message(
+            m.get("role","assistant")
+        ).write(m.get("content",""))
 
-    user_msg = st.chat_input("Ask your coach...")
+    st.write("DEBUG before chat input")
+
+    user_msg = st.chat_input("Ask Asha...")
+
+    st.write("DEBUG after chat input")
 
     if user_msg:
+        st.write("DEBUG message received")
+
         reply = ask_health_coach(memory, user_msg, messages.copy())
-        messages.append({"role": "user", "content": user_msg})
-        messages.append({"role": "assistant", "content": reply})
+
+        messages.append({"role":"user","content":user_msg})
+        messages.append({"role":"assistant","content":reply})
+
         save_chat(chat_name, messages)
+
         st.rerun()
+
 
 with tab_insights:
     show_health_chart(memory)
