@@ -1,4 +1,5 @@
 import streamlit as st
+import math
 
 # ================= AUTH =================
 from core.auth import register_user, login_user
@@ -134,6 +135,172 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 
 with tab_dashboard:
+
+    # =============================
+    # 🌅 DAILY WELCOME HERO
+    # =============================
+
+    st.markdown("""
+    <style>
+    .hero {
+        padding:20px;
+        border-radius:15px;
+        background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+        color:white;
+        margin-bottom:20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    user_name = st.session_state.user
+    health_score = memory.get("health_score", 50)
+
+    st.markdown(f"""
+    <div class="hero">
+    <h2>👋 Welcome back, {user_name}</h2>
+    <p>Your AI Health Coach is tracking your progress daily.</p>
+    <h3>🧠 Health Score: {health_score}</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # =====================================================
+    # 🤖 AI COACH PRESENCE CARD
+    # =====================================================
+
+    st.markdown("""
+    <style>
+    .coach-card{
+        padding:18px;
+        border-radius:14px;
+        background:#111827;
+        color:white;
+        margin-bottom:15px;
+    }
+    .small-text{color:#9ca3af;font-size:14px;}
+    </style>
+    """, unsafe_allow_html=True)
+
+    emotion = memory.get("emotional_state", "balanced")
+
+    status_map = {
+        "balanced": "You are stable today.",
+        "struggling": "I'm keeping things gentle today.",
+        "winning": "You're doing amazing lately 🔥",
+        "challenger": "Let's push your limits today."
+    }
+
+    st.markdown(f"""
+    <div class="coach-card">
+    <h3>👩‍⚕️ Asha — Your AI Health Coach</h3>
+    <p class="small-text">Online • Learning from you daily</p>
+    <p>{status_map.get(emotion)}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+    # =====================================================
+    # 🎯 DAILY MISSION GENERATOR
+    # =====================================================
+
+    st.subheader("🎯 Today's Mission")
+
+    missions = []
+
+    if memory.get("water_intake", 0) < 8:
+        missions.append("💧 Drink 2 more glasses of water")
+
+    if memory.get("sleep_hours", 0) < 7:
+        missions.append("😴 Sleep at least 7 hours tonight")
+
+    if not memory.get("exercise_done", False):
+        missions.append("🚶 Take a 10-minute walk")
+
+    if memory.get("energy_level", 5) <= 4:
+        missions.append("🧘 Do light stretching or breathing")
+
+    if not missions:
+        missions.append("🔥 Maintain your healthy routine today!")
+
+    for m in missions:
+        st.info(m)
+
+
+    # =====================================================
+    # 🔥 STREAK FLAME UI
+    # =====================================================
+
+    st.subheader("🔥 Consistency Streak")
+
+    streak = memory.get("streak_days", 0)
+
+    flames = "🔥" * min(streak, 10)
+
+    st.markdown(f"""
+    ### {flames}
+    You are on a **{streak}-day streak**
+    """)
+
+    if streak >= 7:
+        st.success("Consistency level: Strong Habit Formation")
+
+
+    # =====================================================
+    # 🍎 APPLE-STYLE PROGRESS RINGS
+    # =====================================================
+
+    st.subheader("📊 Daily Progress")
+
+    sleep = memory.get("sleep_hours", 0)
+    water = memory.get("water_intake", 0)
+    energy = memory.get("energy_level", 5)
+
+    def progress_ring(value, max_value, label):
+
+        percent = min(value / max_value, 1)
+        angle = percent * 360
+
+        st.markdown(f"""
+        <div style="
+            width:120px;
+            height:120px;
+            border-radius:50%;
+            background:conic-gradient(
+                #22c55e {angle}deg,
+                #1f2937 {angle}deg
+            );
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin:auto;">
+            <div style="
+                width:85px;
+                height:85px;
+                background:#0b0f19;
+                border-radius:50%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                color:white;
+                font-weight:bold;">
+                {int(percent*100)}%
+            </div>
+        </div>
+        <p style="text-align:center">{label}</p>
+        """, unsafe_allow_html=True)
+
+
+    r1, r2, r3 = st.columns(3)
+
+    with r1:
+        progress_ring(sleep, 8, "Sleep")
+
+    with r2:
+        progress_ring(water, 8, "Hydration")
+
+    with r3:
+        progress_ring(energy, 10, "Energy")
+
+
 
     st.subheader("📱 WhatsApp Notifications")
 
