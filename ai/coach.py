@@ -139,14 +139,22 @@ STRICT RULES:
     # -------------------------------------------------
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages
-        )
+        model="gpt-4o-mini",
+        messages=messages
+    )
 
         reply = response.choices[0].message.content
 
-    except Exception:
-        return "⚠️ AI temporarily unavailable."
+    except Exception as e:
+
+        # OFFLINE SAFE MODE
+        reply = (
+            "⚠️ Asha is currently in offline mode.\n\n"
+            "AI responses are paused because API billing is not active.\n"
+            "Your app UI and health tracking are still working normally."
+    )
+
+    return reply
 
     # -------------------------------------------------
     # REGISTER USAGE
