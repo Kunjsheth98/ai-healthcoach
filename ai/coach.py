@@ -107,7 +107,7 @@ User personality type: {personality_type}
 User emotional state: {emotion}
 
 Health score: {memory.get('health_score', 50)}
-Goal: {memory.get('health_goals','general fitness')}
+Heath goal: {memory.get('health_goals','general fitness')}
 
 Long-term profile:
 {long_term_summary}
