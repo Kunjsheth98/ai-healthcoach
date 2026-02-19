@@ -41,6 +41,10 @@ from agents.nutritionist_brain import nutritionist_brain
 from agents.metabolic_predictor import metabolic_predictor
 from agents.behavior_brain import behavior_brain
 
+from agents.health_identity import classify_health_identity
+from agents.pattern_reflection import generate_pattern_reflection
+from agents.future_projection import generate_future_projection
+
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
 from admin.control_center import admin_control_center
@@ -124,6 +128,61 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 with tab_dashboard:
 
+    # ================= FIRST TIME ONBOARDING =================
+
+    if not memory.get("identity_profile_created"):
+
+        st.subheader("🧬 Let's Personalize Your Health Journey")
+
+        discipline = st.slider("How disciplined are you with routines?", 1, 10, 5)
+        stress = st.slider("Current stress level?", 1, 10, 5)
+        activity = st.selectbox("Your activity type", [
+            "Sedentary (desk work)",
+            "Moderately active",
+            "Very active"
+        ])
+        sleep_pattern = st.selectbox("Your sleep pattern", [
+            "Late sleeper",
+            "Early riser",
+            "Irregular"
+        ])
+        goal_type = st.selectbox("Main health goal", [
+            "Fat loss",
+            "Muscle gain",
+            "Energy boost",
+            "Stress reduction",
+            "General fitness"
+        ])
+
+        if st.button("Complete Setup"):
+
+            memory["discipline_score"] = discipline
+            memory["stress_level"] = stress
+            memory["activity_type"] = activity
+            memory["sleep_pattern"] = sleep_pattern
+            memory["health_goal"] = goal_type
+
+            if discipline >= 8 and stress <= 4:
+                identity = "⚔️ Structured Achiever"
+            elif stress >= 7:
+                identity = "🌪 Resilient Overthinker"
+            elif activity == "Sedentary (desk work)":
+                identity = "🧠 Desk Warrior"
+            elif goal_type == "Fat loss":
+                identity = "🔥 Transformation Seeker"
+            else:
+                identity = "🌱 Adaptive Builder"
+
+            memory["health_identity"] = identity
+            memory["identity_profile_created"] = True
+
+            st.success(f"Your Health Identity: {identity}")
+            save_memory(memory)
+            st.rerun()
+
+        st.stop()
+
+
     # ---------- GRADIENT HERO ----------
     st.markdown("""
     <style>
@@ -155,7 +214,11 @@ with tab_dashboard:
         <p>Online • Learning from you daily</p>
         <h3>Health Score: {memory.get("health_score",50)}</h3>
         </div>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+    st.subheader("🏷 Your Health Identity")
+    st.success(memory.get("health_identity", "Not Classified Yet"))
+
 
 
     st.subheader("📱 WhatsApp Notifications")
@@ -204,7 +267,7 @@ with tab_dashboard:
             </div>
             </div>
             <p style="text-align:center">{label}</p>
-            """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
     r1,r2,r3 = st.columns(3)
 
@@ -216,6 +279,24 @@ with tab_dashboard:
 
     with r3:
         progress_ring(memory.get("energy_level",5),10,"Energy")
+
+    # ---------------- FIRST DAY HOOK ENGINE ----------------
+
+    classify_health_identity(memory)
+    generate_pattern_reflection(memory)
+    generate_future_projection(memory)
+
+    st.subheader("🧬 Your Health Identity")
+    st.success(memory.get("health_identity", ""))
+
+    if memory.get("first_day_insights"):
+        st.subheader("🧠 What Your Health Pattern Shows")
+        for insight in memory["first_day_insights"]:
+            st.info(insight)
+
+    if memory.get("future_projection"):
+        st.subheader("🔮 Health Outlook")
+        st.warning(memory["future_projection"])
 
 
     gamification_ui(memory)
