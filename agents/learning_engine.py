@@ -67,13 +67,30 @@ Keep under 120 words.
     memory["long_term_summary"] = summary
     memory["last_learning_update"] = datetime.now().isoformat()
 
+def analyze_mood_trend(memory):
+
+    mood_log = memory.get("emotional_event_log", [])
+
+    if len(mood_log) < 3:
+        return
+
+    last_three = [entry["mood"] for entry in mood_log[-3:]]
+
+    if last_three[-1] < last_three[0]:
+        mood_trend = "declining"
+    elif last_three[-1] > last_three[0]:
+        mood_trend = "improving"
+    else:
+        mood_trend = "stable"
+
+    memory["mood_trend"] = mood_trend    
+
     save_memory(memory)
 
-
+    analyze_mood_trend(memory)
 # --------------------------------------------------
 # UI DISPLAY
 # --------------------------------------------------
-
 
 def learning_engine_ui(memory):
 

@@ -18,14 +18,14 @@ def should_generate_weekly_report(memory):
     last = datetime.fromisoformat(last_date)
     return datetime.now() - last > timedelta(days=7)
 
-
+    
 # --------------------------------------------------
 # GENERATE AI STORY
 # --------------------------------------------------
 
 
 def generate_weekly_story(memory):
-
+    
     habits = memory.get("habit_log", [])
 
     if len(habits) < 3:
@@ -46,6 +46,7 @@ Health score: {memory['health_score']}
 Energy: {memory['energy_level']}
 Sleep: {memory['sleep_hours']}
 Water intake: {memory['water_intake']}
+Mood Trend: {memory.get('mood_trend', 'stable')}
 
 Explain:
 - improvement
@@ -62,9 +63,8 @@ Write emotionally and positively.
 
     memory["weekly_story"] = story
     memory["weekly_report_date"] = datetime.now().isoformat()
-
     save_memory(memory)
-
+    
 
 # --------------------------------------------------
 # DISPLAY STORY

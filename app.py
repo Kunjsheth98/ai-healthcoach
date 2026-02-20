@@ -323,7 +323,7 @@ with tab_dashboard:
         prob = memory["risk_forecast"].get("burnout_probability", 0)
         st.info(f"🧠 Burnout Prediction Risk: {int(prob*100)}%")    
 
-        def progress_ring(value, max_value, label):
+    def progress_ring(value, max_value, label):
             percent = min(value / max_value, 1)
             angle = percent * 360
 
@@ -421,11 +421,20 @@ with tab_dashboard:
 
     sleep = st.slider("Sleep Hours", 0, 12, memory.get("sleep_hours", 6))
     energy = st.slider("Energy", 1, 10, memory.get("energy_level", 5))
+    mood = st.slider("Mood Today (1 = Very Low, 10 = Excellent)", 
+                 1, 10, 
+                 memory.get("daily_mood", 5))
     exercise = st.checkbox("Exercise done", memory.get("exercise_done", False))
     water = st.number_input("Water glasses", 0, 20, memory.get("water_intake", 0))
 
     if st.button("Save Check-In"):
-
+        memory["daily_mood"] = mood
+        memory.setdefault("emotional_event_log", [])
+        memory["emotional_event_log"].append({
+            "mood": mood,
+            "sleep": sleep,
+            "energy": energy
+        })
         memory["sleep_hours"] = sleep
         memory["energy_level"] = energy
         memory["exercise_done"] = exercise
