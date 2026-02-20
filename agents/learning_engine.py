@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 from core.config import client
 from core.memory import save_memory
 
-
 # --------------------------------------------------
 # SHOULD UPDATE LEARNING MEMORY
 # --------------------------------------------------
+
 
 def should_update_learning(memory):
 
@@ -24,6 +24,7 @@ def should_update_learning(memory):
 # --------------------------------------------------
 # GENERATE LONG TERM SUMMARY
 # --------------------------------------------------
+
 
 def generate_long_term_summary(memory):
 
@@ -56,7 +57,7 @@ Create a short summary describing:
 - coaching style preference
 
 Keep under 120 words.
-"""
+""",
             }
         ],
     )
@@ -72,6 +73,7 @@ Keep under 120 words.
 # --------------------------------------------------
 # UI DISPLAY
 # --------------------------------------------------
+
 
 def learning_engine_ui(memory):
 

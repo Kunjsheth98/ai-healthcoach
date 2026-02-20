@@ -6,6 +6,7 @@ ANXIETY_WORDS = ["anxious", "worried", "panic", "fear"]
 NEGATIVE_SELF = ["i am useless", "i am not good enough", "i always fail"]
 LOW_MOTIVATION = ["lazy", "unmotivated", "can't focus"]
 
+
 def process_mental_state(memory, message):
 
     text = message.lower()
@@ -42,15 +43,18 @@ def process_mental_state(memory, message):
         100
         - (memory["stress_index"] * 5)
         - (memory["anxiety_index"] * 4)
-        + (memory["resilience_score"] * 0.3)
+        + (memory["resilience_score"] * 0.3),
     )
 
-    memory["mental_history"].append({
-        "timestamp": datetime.utcnow().isoformat(),
-        "stress": memory["stress_index"],
-        "anxiety": memory["anxiety_index"],
-        "motivation": memory["motivation_level"]
-    })
+    memory["mental_history"].append(
+        {
+            "timestamp": datetime.utcnow().isoformat(),
+            "stress": memory["stress_index"],
+            "anxiety": memory["anxiety_index"],
+            "motivation": memory["motivation_level"],
+        }
+    )
+
 
 def post_response_learning(memory, user_message, ai_reply):
 

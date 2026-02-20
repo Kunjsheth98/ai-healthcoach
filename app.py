@@ -49,7 +49,6 @@ from agents.medicine_reminder import medicine_reminder_agent
 from agents.voice_engine import speak_text
 from agents.body_composition import calculate_body_fat
 
-
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
 from admin.control_center import admin_control_center
@@ -59,7 +58,6 @@ from ai.coach import ask_health_coach
 
 # ================= DASHBOARD =================
 from dashboard.charts import show_health_chart
-
 
 # =====================================================
 # PAGE CONFIG
@@ -116,14 +114,23 @@ st.caption(f"Logged in as: {st.session_state.user}")
 # =====================================================
 ADMIN_USERS = ["demo"]
 
-tabs = ["🏠 Dashboard", "💬 Coach", "🧠 Mental", "📊 Insights", "🧭 Planner", "🗂️ Records"]
+tabs = [
+    "🏠 Dashboard",
+    "💬 Coach",
+    "🧠 Mental",
+    "📊 Insights",
+    "🧭 Planner",
+    "🗂️ Records",
+]
 
 if st.session_state.user in ADMIN_USERS:
     tabs.append("🛠️ Admin")
 
 all_tabs = st.tabs(tabs)
 
-tab_dashboard, tab_chat, tab_mental, tab_insights, tab_planner, tab_records = all_tabs[:6]
+tab_dashboard, tab_chat, tab_mental, tab_insights, tab_planner, tab_records = all_tabs[
+    :6
+]
 
 if st.session_state.user in ADMIN_USERS:
     tab_admin = all_tabs[5]
@@ -133,7 +140,7 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 with tab_dashboard:
 
-# ================= CLEAN STRUCTURED ONBOARDING =================
+    # ================= CLEAN STRUCTURED ONBOARDING =================
 
     if not memory.get("onboarding_complete"):
 
@@ -149,7 +156,7 @@ with tab_dashboard:
 
         diseases = st.multiselect(
             "Any Known Medical Conditions?",
-            ["Diabetes", "Thyroid", "Hypertension", "PCOS", "Heart Issues", "Asthma"]
+            ["Diabetes", "Thyroid", "Hypertension", "PCOS", "Heart Issues", "Asthma"],
         )
 
         medications = st.text_input("Current Medications (optional)")
@@ -159,25 +166,25 @@ with tab_dashboard:
         discipline = st.slider("How disciplined are you with routines?", 1, 10, 5)
         stress = st.slider("Current stress level?", 1, 10, 5)
 
-        activity = st.selectbox("Your activity type", [
-            "Sedentary (desk work)",
-            "Moderately active",
-            "Very active"
-        ])
+        activity = st.selectbox(
+            "Your activity type",
+            ["Sedentary (desk work)", "Moderately active", "Very active"],
+        )
 
-        sleep_pattern = st.selectbox("Your sleep pattern", [
-            "Late sleeper",
-            "Early riser",
-            "Irregular"
-        ])
+        sleep_pattern = st.selectbox(
+            "Your sleep pattern", ["Late sleeper", "Early riser", "Irregular"]
+        )
 
-        goal_type = st.selectbox("Main health goal", [
-            "Fat loss",
-            "Muscle gain",
-            "Energy boost",
-            "Stress reduction",
-            "General fitness"
-        ])
+        goal_type = st.selectbox(
+            "Main health goal",
+            [
+                "Fat loss",
+                "Muscle gain",
+                "Energy boost",
+                "Stress reduction",
+                "General fitness",
+            ],
+        )
 
         if st.button("Complete Setup"):
 
@@ -188,7 +195,7 @@ with tab_dashboard:
                 "height_cm": height,
                 "weight_kg": weight,
                 "diseases": diseases,
-                "medications": medications
+                "medications": medications,
             }
 
             memory["lifestyle"] = {
@@ -196,7 +203,7 @@ with tab_dashboard:
                 "stress_level": stress,
                 "activity_type": activity,
                 "sleep_pattern": sleep_pattern,
-                "goal": goal_type
+                "goal": goal_type,
             }
 
             memory["onboarding_complete"] = True
@@ -207,10 +214,9 @@ with tab_dashboard:
 
         st.stop()
 
-        calculate_body_fat(memory)
-        if memory.get("body_fat_percentage"):
-            st.metric("🧬 Body Fat %", memory["body_fat_percentage"])
-
+    calculate_body_fat(memory)
+    if memory.get("body_fat_percentage"):
+        st.metric("🧬 Body Fat %", memory["body_fat_percentage"])
 
         from datetime import date
 
@@ -224,7 +230,8 @@ with tab_dashboard:
             save_memory(memory)
 
     # ---------- GRADIENT HERO ----------
-    st.markdown("""
+    st.markdown(
+        """
     <style>
     .hero {
         padding:20px;
@@ -234,16 +241,22 @@ with tab_dashboard:
         margin-bottom:20px;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div class="hero">
         <h2>👋 Welcome back {st.session_state.user}</h2>
         <h3>Health Score: {memory.get("health_score",50)}</h3>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div style="
         padding:20px;
         border-radius:15px;
@@ -254,18 +267,16 @@ with tab_dashboard:
         <p>Online • Learning from you daily</p>
         <h3>Health Score: {memory.get("health_score",50)}</h3>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.subheader("🏷 Your Health Identity")
     st.success(memory.get("health_identity", "Not Classified Yet"))
 
-
     st.subheader("📱 WhatsApp Notifications")
 
-    phone = st.text_input(
-        "Enter WhatsApp number",
-        value=memory.get("phone_number", "")
-    )
+    phone = st.text_input("Enter WhatsApp number", value=memory.get("phone_number", ""))
 
     if st.button("Save Number"):
         memory["phone_number"] = phone
@@ -279,6 +290,7 @@ with tab_dashboard:
 
     c1.metric("🧠 Health Score", memory.get("health_score", 50))
     from core.subscription import has_premium_access
+
     if has_premium_access("mental_engine"):
         st.metric("🧠 Mental Score", memory.get("mental_score", 50))
     c2.metric("💧 Water", memory.get("water_intake", 0))
@@ -287,8 +299,7 @@ with tab_dashboard:
 
     memory.setdefault("daily_food_log", [])
     food_calories_today = sum(
-        (entry.get("calories") or 0)
-        for entry in memory["daily_food_log"]
+        (entry.get("calories") or 0) for entry in memory["daily_food_log"]
     )
     c5.metric("🍛 Food Calories", food_calories_today)
     # ---------------- MENTAL HEALTH SECTION ----------------
@@ -302,11 +313,22 @@ with tab_dashboard:
         m1.metric("Stress Index", memory.get("stress_index", 5))
         m2.metric("Anxiety Index", memory.get("anxiety_index", 5))
         m3.metric("Burnout Risk", memory.get("burnout_risk_level", 0))
-        def progress_ring(value, max_value, label):
-            percent = min(value/max_value,1)
-            angle = percent*360
 
-            st.markdown(f"""
+    if memory.get("burnout_risk_level", 0) >= 7:
+        st.error("⚠️ High Burnout Risk Detected. Consider rest and stress reset.")
+    elif memory.get("burnout_risk_level", 0) >= 4:
+        st.warning("⚡ Moderate Burnout Signals Detected.")
+
+    if memory.get("risk_forecast"):
+        prob = memory["risk_forecast"].get("burnout_probability", 0)
+        st.info(f"🧠 Burnout Prediction Risk: {int(prob*100)}%")    
+
+        def progress_ring(value, max_value, label):
+            percent = min(value / max_value, 1)
+            angle = percent * 360
+
+            st.markdown(
+                f"""
             <div style="
                 width:120px;height:120px;border-radius:50%;
                 background:conic-gradient(#22c55e {angle}deg,#1f2937 {angle}deg);
@@ -319,22 +341,21 @@ with tab_dashboard:
             </div>
             </div>
             <p style="text-align:center">{label}</p>
-        """, unsafe_allow_html=True)
+        """,
+                unsafe_allow_html=True,
+            )
 
-
-
-    r1,r2,r3 = st.columns(3)
+    r1, r2, r3 = st.columns(3)
 
     with r1:
-        progress_ring(memory.get("sleep_hours",0),8,"Sleep")
+        progress_ring(memory.get("sleep_hours", 0), 8, "Sleep")
 
     with r2:
-        progress_ring(memory.get("water_intake",0),8,"Hydration")
+        progress_ring(memory.get("water_intake", 0), 8, "Hydration")
 
     with r3:
-        progress_ring(memory.get("energy_level",5),10,"Energy")
+        progress_ring(memory.get("energy_level", 5), 10, "Energy")
 
-        
     # ---------------- FIRST DAY HOOK ENGINE ----------------
 
     classify_health_identity(memory)
@@ -353,15 +374,12 @@ with tab_dashboard:
         st.subheader("🔮 Health Outlook")
         st.warning(memory["future_projection"])
 
-
     gamification_ui(memory)
     morning_briefing_ui(memory)
     nutritionist_brain(memory)
     metabolic_predictor(memory)
     behavior_brain(memory)
     medicine_reminder_agent(memory)
-
-
 
     if memory.get("nutrition_insights"):
         st.subheader("🧠 AI Nutritionist Insights")
@@ -394,9 +412,10 @@ with tab_dashboard:
     food_image = st.file_uploader("Upload meal photo")
 
     if food_image:
-            from agents.food_vision_engine import analyze_food_image
-            result = analyze_food_image(food_image, memory)
-            st.info(result)  
+        from agents.food_vision_engine import analyze_food_image
+
+        result = analyze_food_image(food_image, memory)
+        st.info(result)
 
     st.subheader("Daily Check-In")
 
@@ -417,18 +436,12 @@ with tab_dashboard:
 
     if current_weight:
         memory.setdefault("weight_history", [])
-        memory["weight_history"].append({
-            "weight": current_weight
-        })
-
+        memory["weight_history"].append({"weight": current_weight})
 
         memory.setdefault("daily_health_log", [])
-        memory["daily_health_log"].append({
-            "sleep": sleep,
-            "energy": energy,
-            "water": water,
-            "exercise": exercise
-        })
+        memory["daily_health_log"].append(
+            {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
+        )
 
         calculate_health_score(memory)
         update_streak(memory)
@@ -456,15 +469,12 @@ with tab_dashboard:
 # (UNCHANGED — EXACT SAME AS YOUR VERSION)
 
 with tab_chat:
-    
+
     reply = ""
 
     chats = list_chats()
 
-    chat_name = st.selectbox(
-        "Select Chat",
-        chats if chats else ["default"]
-    )
+    chat_name = st.selectbox("Select Chat", chats if chats else ["default"])
 
     # Safe chat loading
     try:
@@ -474,9 +484,7 @@ with tab_chat:
 
     # Show chat history
     for m in messages:
-        st.chat_message(
-            m.get("role", "assistant")
-        ).write(m.get("content", ""))
+        st.chat_message(m.get("role", "assistant")).write(m.get("content", ""))
 
     # Chat input ALWAYS renders
     uploaded_image = st.file_uploader("Upload image (optional)", key="chat_img")
@@ -485,12 +493,7 @@ with tab_chat:
     if user_msg:
 
         try:
-            reply = ask_health_coach(
-                memory,
-                user_msg,
-                messages.copy(),
-                uploaded_image
-            )
+            reply = ask_health_coach(memory, user_msg, messages.copy(), uploaded_image)
         except Exception:
             # Offline fallback (no API billing)
             reply = (
@@ -503,19 +506,14 @@ with tab_chat:
         messages.append({"role": "assistant", "content": reply})
         st.session_state.last_reply = reply
 
-
         save_chat(chat_name, messages)
         st.rerun()
-        
-    language = st.selectbox(
-    "Voice Language",
-    ["en", "hi", "mr", "ta"],
-    index=0
-    )
+
+    language = st.selectbox("Voice Language", ["en", "hi", "mr", "ta"], index=0)
 
     if st.button("🔊 Hear Reply"):
         if "last_reply" in st.session_state:
-            speak_text(st.session_state.last_reply,language)
+            speak_text(st.session_state.last_reply, language)
 
 with tab_mental:
 
@@ -543,6 +541,42 @@ with tab_mental:
 
 
 with tab_insights:
+
+    # ---------------- MENTAL SCORE GRAPH ----------------
+    if has_premium_access("mental_engine"):
+
+        import matplotlib.pyplot as plt
+
+        mental_history = memory.get("mental_history", [])
+
+        if mental_history:
+            scores = [entry.get("mental_score", 50) for entry in mental_history]
+
+            fig, ax = plt.subplots()
+            ax.plot(scores)
+            ax.set_title("Mental Score Trend")
+            ax.set_ylabel("Score")
+            ax.set_xlabel("Check-ins")
+
+            st.pyplot(fig)
+
+        sleep_log = memory.get("daily_health_log", [])
+        mental_log = memory.get("mental_history", [])
+
+        if sleep_log and mental_log:
+
+            sleep_values = [d.get("sleep", 0) for d in sleep_log]
+            mental_scores = [m.get("mental_score", 50) for m in mental_log]
+
+        if len(sleep_values) == len(mental_scores):
+
+            fig, ax = plt.subplots()
+            ax.plot(sleep_values, label="Sleep")
+            ax.plot(mental_scores, label="Mental Score")
+            ax.legend()
+
+            st.pyplot(fig)        
+
     show_health_chart(memory)
     habit_insight_ui(memory)
     emotional_feedback_ui(memory)
@@ -576,6 +610,7 @@ with tab_records:
     prescription_reader_ui(memory)
 
 if st.session_state.user in ADMIN_USERS:
+    tab_admin = all_tabs[-1]   # last tab is admin
     with tab_admin:
         admin_dashboard()
         st.divider()

@@ -4,10 +4,10 @@ from core.config import client
 from core.memory import save_memory
 from agents.whatsapp_sender import send_whatsapp_message
 
-
 # --------------------------------------------------
 # SHOULD RUN AUTO COACH?
 # --------------------------------------------------
+
 
 def should_run_auto_coach(memory):
 
@@ -25,6 +25,7 @@ def should_run_auto_coach(memory):
 # --------------------------------------------------
 # GENERATE COACH MESSAGE
 # --------------------------------------------------
+
 
 def generate_autonomous_message(memory):
 
@@ -51,7 +52,7 @@ Provide:
 - small actionable suggestion
 - supportive tone
 Keep under 2 sentences.
-"""
+""",
             }
         ],
     )
@@ -62,6 +63,7 @@ Keep under 2 sentences.
 # --------------------------------------------------
 # MAIN AGENT
 # --------------------------------------------------
+
 
 def autonomous_ai_coach(memory):
 
@@ -78,9 +80,6 @@ def autonomous_ai_coach(memory):
 
     # WhatsApp delivery
     if memory.get("phone_number"):
-        send_whatsapp_message(
-            memory["phone_number"],
-            f"🤖 AI Coach:\n{message}"
-        )
+        send_whatsapp_message(memory["phone_number"], f"🤖 AI Coach:\n{message}")
 
     save_memory(memory)

@@ -4,11 +4,10 @@ from core.config import client
 from core.memory import save_memory
 from agents.whatsapp_sender import send_whatsapp_message
 
-
-
 # --------------------------------------------------
 # SHOULD GENERATE NEW BRIEFING?
 # --------------------------------------------------
+
 
 def should_generate_briefing(memory):
 
@@ -20,6 +19,7 @@ def should_generate_briefing(memory):
 # --------------------------------------------------
 # GENERATE AI BRIEFING
 # --------------------------------------------------
+
 
 def generate_morning_briefing(memory):
 
@@ -48,9 +48,9 @@ Include:
 - simple achievable goal
 
 Keep it concise and encouraging.
-"""
+""",
             }
-        ]
+        ],
     )
 
     briefing = response.choices[0].message.content
@@ -62,13 +62,14 @@ Keep it concise and encouraging.
 
     if memory.get("phone_number"):
         send_whatsapp_message(
-            memory["phone_number"],
-            f"🌅 Morning Health Briefing:\n\n{briefing}"
+            memory["phone_number"], f"🌅 Morning Health Briefing:\n\n{briefing}"
         )
+
 
 # --------------------------------------------------
 # DISPLAY BRIEFING
 # --------------------------------------------------
+
 
 def morning_briefing_ui(memory):
 

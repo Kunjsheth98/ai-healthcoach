@@ -4,24 +4,25 @@
 
 from data.indian_food_db import INDIAN_FOOD_DB
 
-
 # -----------------------------------------------------
 # INITIALIZE USER COOKING PROFILE
 # -----------------------------------------------------
+
 
 def init_cooking_profile(memory):
 
     if "cooking_profile" not in memory:
         memory["cooking_profile"] = {
-            "style": "home_light",   # default Indian home
-            "oil_factor": 1.0,       # calorie multiplier
-            "confidence": 0
+            "style": "home_light",  # default Indian home
+            "oil_factor": 1.0,  # calorie multiplier
+            "confidence": 0,
         }
 
 
 # -----------------------------------------------------
 # DETECT COOKING STYLE FROM USER TEXT
 # -----------------------------------------------------
+
 
 def detect_cooking_style(memory, text):
 
@@ -48,6 +49,7 @@ def detect_cooking_style(memory, text):
 # -----------------------------------------------------
 # CALCULATE FOOD CALORIES (SMART INDIAN WAY)
 # -----------------------------------------------------
+
 
 def calculate_indian_meal(memory, text):
 
@@ -77,11 +79,9 @@ def calculate_indian_meal(memory, text):
 
             total_calories += adjusted * quantity
 
-            foods_detected.append({
-                "food": food,
-                "quantity": quantity,
-                "calories": adjusted * quantity
-            })
+            foods_detected.append(
+                {"food": food, "quantity": quantity, "calories": adjusted * quantity}
+            )
 
     return foods_detected, total_calories
 
@@ -90,11 +90,9 @@ def calculate_indian_meal(memory, text):
 # STORE FOOD INTO MEMORY
 # -----------------------------------------------------
 
+
 def log_meal(memory, foods, calories):
 
     memory.setdefault("daily_food_log", [])
 
-    memory["daily_food_log"].append({
-        "foods": foods,
-        "calories": calories
-    })
+    memory["daily_food_log"].append({"foods": foods, "calories": calories})

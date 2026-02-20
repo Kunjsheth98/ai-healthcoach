@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 from core.memory import save_memory
 from agents.whatsapp_sender import send_whatsapp_message
 
-
 # --------------------------------------------------
 # CREATE REMINDER SCHEDULE FROM MEDICINES
 # --------------------------------------------------
+
 
 def generate_medicine_schedule(memory):
 
@@ -40,6 +40,7 @@ def generate_medicine_schedule(memory):
 # SHOULD CHECK NOW
 # --------------------------------------------------
 
+
 def should_check_medicine(memory):
 
     last = memory.get("last_medicine_check")
@@ -55,6 +56,7 @@ def should_check_medicine(memory):
 # --------------------------------------------------
 # CHECK REMINDERS
 # --------------------------------------------------
+
 
 def medicine_reminder_agent(memory):
 

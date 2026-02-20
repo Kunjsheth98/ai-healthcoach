@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import streamlit as st
 from core.memory import save_memory
 
-
 # ---------------------------------------------
 # LIMIT CONFIG
 # ---------------------------------------------
@@ -10,7 +9,7 @@ from core.memory import save_memory
 FREE_DAILY_LIMIT = 40
 PREMIUM_DAILY_LIMIT = 300
 
-FREE_COOLDOWN = 5        # seconds
+FREE_COOLDOWN = 5  # seconds
 PREMIUM_COOLDOWN = 1
 
 
@@ -18,19 +17,21 @@ PREMIUM_COOLDOWN = 1
 # INITIALIZE TRACKING
 # ---------------------------------------------
 
+
 def init_usage(memory):
 
     if "usage" not in memory:
         memory["usage"] = {
             "daily_count": 0,
             "last_reset": datetime.now().date().isoformat(),
-            "last_message_time": ""
+            "last_message_time": "",
         }
 
 
 # ---------------------------------------------
 # RESET DAILY COUNTER
 # ---------------------------------------------
+
 
 def reset_if_new_day(memory):
 
@@ -44,6 +45,7 @@ def reset_if_new_day(memory):
 # ---------------------------------------------
 # CHECK LIMITS
 # ---------------------------------------------
+
 
 def check_rate_limit(memory):
 
@@ -73,6 +75,7 @@ def check_rate_limit(memory):
 # ---------------------------------------------
 # REGISTER USAGE
 # ---------------------------------------------
+
 
 def register_usage(memory):
 

@@ -5,10 +5,10 @@
 
 import streamlit as st
 
-
 # -----------------------------------
 # DETERMINE USER IDENTITY
 # -----------------------------------
+
 
 def compute_identity(memory):
 
@@ -46,6 +46,7 @@ def compute_identity(memory):
 # -----------------------------------
 # UI DISPLAY
 # -----------------------------------
+
 
 def identity_engine_ui(memory):
 

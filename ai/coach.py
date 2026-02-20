@@ -16,11 +16,7 @@ from core.medical_guardrails import (
 from core.deployment_shield import check_rate_limit, register_usage
 
 # ---------------- BUDGET + COST CONTROL ----------------
-from core.budget_guard import (
-    check_budget,
-    register_ai_call,
-    allow_request
-)
+from core.budget_guard import check_budget, register_ai_call, allow_request
 
 from core.cost_meter import register_cost
 
@@ -30,9 +26,16 @@ from agents.cooking_intelligence import calculate_indian_meal, log_meal
 
 from agents.mental_engine import process_mental_state, post_response_learning
 from core.subscription import has_premium_access
+
+from agents.behavioral_core import (
+    update_behavioral_patterns,
+    predict_risk,
+    evolve_personality,
+)
 # =====================================================
 # MAIN AI FUNCTION
 # =====================================================
+
 
 def ask_health_coach(memory, message, chat_history, uploaded_image=None):
 
@@ -43,14 +46,9 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
 
     if foods:
         memory.setdefault("daily_food_log", [])
-        memory["daily_food_log"].append({
-            "foods": foods,
-            "calories": calories
-        })
+        memory["daily_food_log"].append({"foods": foods, "calories": calories})
 
-        food_summary = ", ".join(
-            [f"{f['quantity']} {f['food']}" for f in foods]
-        )
+        food_summary = ", ".join([f"{f['quantity']} {f['food']}" for f in foods])
 
         message += (
             f"\n\nUser meal detected: {food_summary} "
@@ -93,7 +91,7 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     # -------------------------------------------------
     if not allow_request(memory):
         return "⏳ Too many requests. Please slow down."
-    
+
     # -------------------------------------------------
     # 🧠 PREMIUM MENTAL ENGINE
     # -------------------------------------------------
@@ -167,9 +165,25 @@ Weight Trend:
     Stress Level: {lifestyle.get('stress_level')}
     Emotional State: {emotion}
     """
+    tone = "balanced"
+
+    if memory.get("stress_index", 5) >= 7:
+        tone = "calm and reassuring"
+
+    elif memory.get("motivation_level", 5) <= 3:
+        tone = "encouraging and energizing"
+
+    elif memory.get("personality_type") == "disciplined":
+        tone = "structured and direct"
+
+# ---------------- PHASE 2 BEHAVIOR UPDATE ----------------
+    update_behavioral_patterns(memory)
+    predict_risk(memory)
+    evolve_personality(memory)
 
     system_prompt = f"""
 You are Asha — an Indian AI Health Coach.
+Your tone should be {tone}.
 
 User personality type: {personality_type}
 User emotional state: {emotion}
@@ -190,6 +204,12 @@ Calorie Strategy:
 
 Mental Health Context:
 {mental_context}
+
+Behavior Patterns:
+{memory.get("behavior_patterns")}
+
+Risk Forecast:
+{memory.get("risk_forecast")}
 
 STRICT RULES:
 - Never diagnose diseases
@@ -221,11 +241,9 @@ STRICT RULES:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages
-        )
-        reply = response.choices[0].message.content
-
+    model="gpt-4o-mini", messages=messages  # type: ignore
+    )
+        reply = response.choices[0].message.content or ""
 
     except Exception:
         reply = (
@@ -252,11 +270,7 @@ STRICT RULES:
     # 🛡️ FINAL SAFETY FILTER
     # -------------------------------------------------
 
-    unsafe_words = [
-        "diagnosis",
-        "you have",
-        "take this prescription"
-    ]
+    unsafe_words = ["diagnosis", "you have", "take this prescription"]
 
     if any(word in reply.lower() for word in unsafe_words):
         reply += "\n\n⚠️ This is general wellness guidance, not medical advice."

@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 from core.config import client
 from core.memory import save_memory
 
-
 # --------------------------------------------------
 # CHECK IF WEEK PASSED
 # --------------------------------------------------
+
 
 def should_generate_weekly_report(memory):
 
@@ -22,6 +22,7 @@ def should_generate_weekly_report(memory):
 # --------------------------------------------------
 # GENERATE AI STORY
 # --------------------------------------------------
+
 
 def generate_weekly_story(memory):
 
@@ -52,9 +53,9 @@ Explain:
 - encouragement for next week
 
 Write emotionally and positively.
-"""
+""",
             }
-        ]
+        ],
     )
 
     story = response.choices[0].message.content
@@ -68,6 +69,7 @@ Write emotionally and positively.
 # --------------------------------------------------
 # DISPLAY STORY
 # --------------------------------------------------
+
 
 def weekly_story_ui(memory):
 

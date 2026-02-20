@@ -9,6 +9,7 @@ USERS_FILE = "users/users.json"
 # CREATE USERS STORAGE
 # -------------------------------------
 
+
 def init_user_db():
     if not os.path.exists("users"):
         os.makedirs("users")
@@ -22,6 +23,7 @@ def init_user_db():
 # PASSWORD HASHING
 # -------------------------------------
 
+
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -29,6 +31,7 @@ def hash_password(password):
 # -------------------------------------
 # REGISTER USER
 # -------------------------------------
+
 
 def register_user(username, password):
 
@@ -54,6 +57,7 @@ def register_user(username, password):
 # -------------------------------------
 # LOGIN USER
 # -------------------------------------
+
 
 def login_user(username, password):
 

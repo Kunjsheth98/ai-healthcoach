@@ -2,10 +2,10 @@ import streamlit as st
 from datetime import datetime, timedelta
 from core.config import client
 
-
 # --------------------------------------------------
 # ANALYZE HABIT DATA
 # --------------------------------------------------
+
 
 def analyze_recent_behavior(memory):
 
@@ -41,6 +41,7 @@ def analyze_recent_behavior(memory):
 # ADAPTIVE LIFE PLAN
 # --------------------------------------------------
 
+
 def adaptive_life_planner(memory):
 
     insights = analyze_recent_behavior(memory)
@@ -70,9 +71,9 @@ Create a personalized DAILY ROUTINE for tomorrow including:
 - sleep timing
 
 Keep it simple, motivating and realistic.
-"""
+""",
             }
-        ]
+        ],
     )
 
     st.subheader(f"🧭 Adaptive Plan for {tomorrow}")

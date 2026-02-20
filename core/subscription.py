@@ -1,10 +1,10 @@
 from core.app_config import APP_MODE, PREMIUM_FEATURES
 import streamlit as st
 
-
 # ------------------------------------------
 # CHECK PREMIUM ACCESS
 # ------------------------------------------
+
 
 def has_premium_access(feature_name):
 
@@ -25,9 +25,8 @@ def has_premium_access(feature_name):
 # PREMIUM LOCK UI
 # ------------------------------------------
 
+
 def premium_lock():
 
     st.warning("🔒 Premium Feature")
-    st.info(
-        "This feature is available in Premium AI Coach plan."
-    )
+    st.info("This feature is available in Premium AI Coach plan.")

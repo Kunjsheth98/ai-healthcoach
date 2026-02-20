@@ -2,10 +2,10 @@ import streamlit as st
 from datetime import datetime, timedelta
 from core.memory import save_memory
 
-
 # --------------------------------------------------
 # SHOULD RUN RISK ANALYSIS
 # --------------------------------------------------
+
 
 def should_run_risk_check(memory):
 
@@ -24,6 +24,7 @@ def should_run_risk_check(memory):
 # ANALYZE HEALTH PATTERNS
 # --------------------------------------------------
 
+
 def analyze_health_risks(memory):
 
     risks = []
@@ -35,29 +36,19 @@ def analyze_health_risks(memory):
     streak = memory["streak_days"]
 
     if sleep < 5:
-        risks.append(
-            "😴 Sleep has been low. Fatigue or burnout risk may increase."
-        )
+        risks.append("😴 Sleep has been low. Fatigue or burnout risk may increase.")
 
     if water < 3:
-        risks.append(
-            "💧 Hydration trend is low. Possible dehydration risk."
-        )
+        risks.append("💧 Hydration trend is low. Possible dehydration risk.")
 
     if energy <= 3:
-        risks.append(
-            "⚡ Low energy detected. Consider rest and light activity."
-        )
+        risks.append("⚡ Low energy detected. Consider rest and light activity.")
 
     if score < 40:
-        risks.append(
-            "🩺 Health score declining. Lifestyle imbalance risk."
-        )
+        risks.append("🩺 Health score declining. Lifestyle imbalance risk.")
 
     if streak == 0:
-        risks.append(
-            "📉 Routine inconsistency detected. Habit loss risk."
-        )
+        risks.append("📉 Routine inconsistency detected. Habit loss risk.")
 
     return risks
 
@@ -65,6 +56,7 @@ def analyze_health_risks(memory):
 # --------------------------------------------------
 # MAIN RISK AGENT
 # --------------------------------------------------
+
 
 def health_risk_predictor(memory):
 

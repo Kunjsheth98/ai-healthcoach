@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 from core.config import client
 
+
 def autonomous_planner_agent(memory):
 
     tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
@@ -17,9 +18,9 @@ Create a simple Indian health plan.
 Health score: {memory['health_score']}
 Energy: {memory['energy_level']}
 Goal: {memory['health_goals']}
-"""
+""",
             }
-        ]
+        ],
     )
 
     st.subheader(f"📅 Tomorrow Plan ({tomorrow})")

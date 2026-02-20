@@ -33,6 +33,7 @@ RESTRICTED_PATTERNS = [
 # CHECK EMERGENCY
 # --------------------------------------------------
 
+
 def detect_emergency(text):
 
     text = text.lower()
@@ -48,6 +49,7 @@ def detect_emergency(text):
 # CHECK RESTRICTED REQUEST
 # --------------------------------------------------
 
+
 def detect_restricted_request(text):
 
     text = text.lower()
@@ -62,6 +64,7 @@ def detect_restricted_request(text):
 # --------------------------------------------------
 # SAFE RESPONSE OVERRIDE
 # --------------------------------------------------
+
 
 def emergency_response():
 

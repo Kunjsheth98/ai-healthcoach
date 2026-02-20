@@ -10,10 +10,10 @@ from agents.medicine_reminder import medicine_reminder_agent
 from core.subscription import has_premium_access
 from agents.learning_engine import generate_long_term_summary, should_update_learning
 
-
 # --------------------------------------------------
 # SHOULD MASTER RUN?
 # --------------------------------------------------
+
 
 def should_run_master(memory):
 
@@ -31,6 +31,7 @@ def should_run_master(memory):
 # --------------------------------------------------
 # PRIORITY DECISION ENGINE
 # --------------------------------------------------
+
 
 def decide_actions(memory):
 
@@ -59,11 +60,12 @@ def decide_actions(memory):
 # MASTER OS
 # --------------------------------------------------
 
+
 def health_master_brain(memory):
     # ---- Long-Term Learning Update ----
     if should_update_learning(memory):
         generate_long_term_summary(memory)
-        
+
     if not should_run_master(memory):
         return
 
@@ -110,4 +112,3 @@ def health_master_brain(memory):
     memory["last_master_run"] = datetime.now().isoformat()
 
     save_memory(memory)
-

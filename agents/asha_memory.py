@@ -2,6 +2,7 @@
 # 🧠 ASHA MEMORY PERSONALITY ENGINE
 # =====================================================
 
+
 def update_asha_memory(memory):
 
     memory.setdefault("asha_profile", {})
@@ -33,13 +34,10 @@ def update_asha_memory(memory):
         "disciplined": "challenging",
         "low_energy": "supportive",
         "burnout_risk": "calming",
-        "balanced": "motivational"
+        "balanced": "motivational",
     }
 
-    profile["coach_tone"] = tone_map.get(
-        profile["user_type"],
-        "motivational"
-    )
+    profile["coach_tone"] = tone_map.get(profile["user_type"], "motivational")
 
 
 def get_asha_personality_prompt(memory):

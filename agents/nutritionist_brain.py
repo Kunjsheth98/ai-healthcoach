@@ -3,6 +3,7 @@
 # Weekly Indian Diet Intelligence
 # =====================================================
 
+
 def nutritionist_brain(memory):
 
     memory.setdefault("daily_food_log", [])
@@ -66,8 +67,6 @@ def nutritionist_brain(memory):
         )
 
     if not insights:
-        insights.append(
-            "✅ Your eating pattern looks balanced this week. Keep going!"
-        )
+        insights.append("✅ Your eating pattern looks balanced this week. Keep going!")
 
     memory["nutrition_insights"] = insights

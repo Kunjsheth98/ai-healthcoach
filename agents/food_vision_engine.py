@@ -26,7 +26,7 @@ Return in this format:
 Food: <items>
 Estimated Calories: <number>
 Health Feedback: <short advice>
-"""
+""",
             },
             {
                 "role": "user",
@@ -34,16 +34,14 @@ Health Feedback: <short advice>
                     {"type": "text", "text": "Analyze this food image."},
                     {
                         "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{image_base64}"
-                        },
+                        "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
                     },
                 ],
             },
         ],
     )
 
-    result = response.choices[0].message.content
+    result = response.choices[0].message.content or ""
 
     # Extract calories number roughly
     calories = 0
@@ -54,10 +52,7 @@ Health Feedback: <short advice>
                 calories = int(digits)
 
     memory.setdefault("daily_food_log", [])
-    memory["daily_food_log"].append({
-        "image_analysis": result,
-        "calories": calories
-    })
+    memory["daily_food_log"].append({"image_analysis": result, "calories": calories})
 
     save_memory(memory)
 

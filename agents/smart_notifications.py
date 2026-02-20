@@ -1,9 +1,9 @@
 import streamlit as st
 
-
 # --------------------------------------------------
 # SMART HEALTH NOTIFICATIONS
 # --------------------------------------------------
+
 
 def smart_notification_agent(memory):
 
@@ -20,9 +20,7 @@ def smart_notification_agent(memory):
         st.info("⚡ Energy seems low. Consider light stretching or rest.")
 
     if score < 40:
-        st.error(
-            "🚨 Health score dropping. Focus on sleep and hydration today."
-        )
+        st.error("🚨 Health score dropping. Focus on sleep and hydration today.")
 
     if memory.get("exercise_done") is False:
         st.write("🏃 A short 10-minute walk could improve today's score.")

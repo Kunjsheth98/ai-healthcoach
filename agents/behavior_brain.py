@@ -3,6 +3,7 @@
 # Habit Relapse + Motivation + Engagement Predictor
 # =====================================================
 
+
 def behavior_brain(memory):
 
     memory.setdefault("behavior_alerts", [])
@@ -26,9 +27,7 @@ def behavior_brain(memory):
     # -------------------------------------------------
 
     if exercise_days <= 1:
-        alerts.append(
-            "⚠️ Habit relapse risk detected. Activity consistency dropping."
-        )
+        alerts.append("⚠️ Habit relapse risk detected. Activity consistency dropping.")
 
     # -------------------------------------------------
     # MOTIVATION DROP
@@ -44,17 +43,13 @@ def behavior_brain(memory):
     # -------------------------------------------------
 
     if avg_sleep < 5:
-        alerts.append(
-            "🔥 Burnout signal detected. Recovery and sleep needed."
-        )
+        alerts.append("🔥 Burnout signal detected. Recovery and sleep needed.")
 
     # -------------------------------------------------
     # POSITIVE MOMENTUM
     # -------------------------------------------------
 
     if exercise_days >= 4 and avg_energy >= 7:
-        alerts.append(
-            "🚀 Strong habit momentum detected. Keep this streak going!"
-        )
+        alerts.append("🚀 Strong habit momentum detected. Keep this streak going!")
 
     memory["behavior_alerts"] = alerts

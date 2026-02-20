@@ -9,7 +9,7 @@ def calculate_body_fat(memory):
         return
 
     height_m = height_cm / 100
-    bmi = weight_kg / (height_m ** 2)
+    bmi = weight_kg / (height_m**2)
 
     # Basic estimate formula
     if gender == "Male":

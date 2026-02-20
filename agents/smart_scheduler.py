@@ -3,11 +3,10 @@ from datetime import datetime, timedelta
 from core.memory import save_memory
 from agents.whatsapp_sender import send_whatsapp_message
 
-
-
 # --------------------------------------------------
 # SHOULD RUN REMINDER CHECK?
 # --------------------------------------------------
+
 
 def should_run_scheduler(memory):
 
@@ -26,6 +25,7 @@ def should_run_scheduler(memory):
 # GENERATE SMART REMINDERS
 # --------------------------------------------------
 
+
 def generate_reminders(memory):
 
     reminders = []
@@ -37,14 +37,10 @@ def generate_reminders(memory):
         reminders.append("⚡ Energy looks low. Try light stretching.")
 
     if memory["health_score"] < 40:
-        reminders.append(
-            "🩺 Health score dropped. Focus on rest and hydration today."
-        )
+        reminders.append("🩺 Health score dropped. Focus on rest and hydration today.")
 
     if not memory["exercise_done"]:
-        reminders.append(
-            "🏃 A short walk today can improve your health score."
-        )
+        reminders.append("🏃 A short walk today can improve your health score.")
 
     return reminders
 
@@ -52,6 +48,7 @@ def generate_reminders(memory):
 # --------------------------------------------------
 # MAIN SCHEDULER AGENT
 # --------------------------------------------------
+
 
 def smart_reminder_scheduler(memory):
 
@@ -68,7 +65,6 @@ def smart_reminder_scheduler(memory):
 
     if memory.get("phone_number"):
         send_whatsapp_message(memory["phone_number"], r)
-
 
         memory["reminder_log"].extend(reminders)
 

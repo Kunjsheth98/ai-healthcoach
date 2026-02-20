@@ -5,6 +5,7 @@ import streamlit as st
 # PERSONALITY EVOLUTION ENGINE
 # -----------------------------------------
 
+
 def update_personality_identity(memory):
 
     score = memory["health_score"]
@@ -45,6 +46,7 @@ def update_personality_identity(memory):
 # SHOW PERSONALITY UI
 # -----------------------------------------
 
+
 def personality_display_ui(memory):
 
     personality = memory.get("personality_type", "adaptive")
@@ -53,7 +55,7 @@ def personality_display_ui(memory):
         "supportive_companion": "🤍 Supportive Companion",
         "accountability_partner": "🧭 Accountability Partner",
         "performance_coach": "🔥 Performance Coach",
-        "elite_trainer": "🚀 Elite Trainer"
+        "elite_trainer": "🚀 Elite Trainer",
     }
 
     st.subheader("🧬 Your AI Coach Personality")

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import streamlit as st
 
+
 def show_health_chart(memory):
 
     scores = [memory["health_score"]] * 7

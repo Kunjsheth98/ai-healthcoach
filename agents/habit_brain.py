@@ -6,6 +6,7 @@ import streamlit as st
 # STORE DAILY HABIT SNAPSHOT
 # -----------------------------------------
 
+
 def log_daily_habits(memory):
 
     today = datetime.now().date().isoformat()
@@ -21,7 +22,7 @@ def log_daily_habits(memory):
         "water": memory["water_intake"],
         "energy": memory["energy_level"],
         "exercise": memory["exercise_done"],
-        "health_score": memory["health_score"]
+        "health_score": memory["health_score"],
     }
 
     memory["habit_log"].append(snapshot)
@@ -31,9 +32,11 @@ def log_daily_habits(memory):
 
     save_memory(memory)
 
+
 # -----------------------------------------
 # PATTERN DETECTION
 # -----------------------------------------
+
 
 def analyze_habits(memory):
 
@@ -59,9 +62,11 @@ def analyze_habits(memory):
 
     return insights
 
+
 # -----------------------------------------
 # PERSONALITY ADAPTATION
 # -----------------------------------------
+
 
 def update_personality(memory):
 
@@ -78,9 +83,11 @@ def update_personality(memory):
 
     save_memory(memory)
 
+
 # -----------------------------------------
 # SHOW HABIT INSIGHTS
 # -----------------------------------------
+
 
 def habit_insight_ui(memory):
 

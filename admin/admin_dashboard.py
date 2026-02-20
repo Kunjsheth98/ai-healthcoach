@@ -2,10 +2,10 @@ import os
 import json
 import streamlit as st
 
-
 # --------------------------------------------------
 # GET ALL USERS
 # --------------------------------------------------
+
 
 def get_all_users():
 
@@ -13,7 +13,8 @@ def get_all_users():
         return []
 
     return [
-        name for name in os.listdir("users")
+        name
+        for name in os.listdir("users")
         if os.path.isdir(os.path.join("users", name))
     ]
 
@@ -21,6 +22,7 @@ def get_all_users():
 # --------------------------------------------------
 # LOAD USER MEMORY
 # --------------------------------------------------
+
 
 def load_user_memory(user):
 
@@ -36,6 +38,7 @@ def load_user_memory(user):
 # --------------------------------------------------
 # ADMIN DASHBOARD UI
 # --------------------------------------------------
+
 
 def admin_dashboard():
 

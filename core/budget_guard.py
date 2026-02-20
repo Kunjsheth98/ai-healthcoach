@@ -2,28 +2,24 @@ import time
 from datetime import datetime
 from core.memory import save_memory
 
-
 # =====================================================
 # CONFIGURATION
 # =====================================================
 
-MAX_DAILY_AI_CALLS = 120       # max AI calls per day
-DAILY_COST_LIMIT = 3.0         # default daily budget (USD)
-MAX_REQUESTS_PER_MINUTE = 10   # anti-spam protection
+MAX_DAILY_AI_CALLS = 120  # max AI calls per day
+DAILY_COST_LIMIT = 3.0  # default daily budget (USD)
+MAX_REQUESTS_PER_MINUTE = 10  # anti-spam protection
 
 
 # =====================================================
 # INITIALIZE MEMORY STRUCTURE
 # =====================================================
 
+
 def init_budget(memory):
 
     if "budget" not in memory:
-        memory["budget"] = {
-            "ai_calls_today": 0,
-            "daily_cost": 0.0,
-            "request_times": []
-        }
+        memory["budget"] = {"ai_calls_today": 0, "daily_cost": 0.0, "request_times": []}
 
     if "ai_paused" not in memory:
         memory["ai_paused"] = False
@@ -35,6 +31,7 @@ def init_budget(memory):
 # =====================================================
 # DAILY AUTO RESET SYSTEM
 # =====================================================
+
 
 def daily_reset(memory):
 
@@ -60,6 +57,7 @@ def daily_reset(memory):
 # =====================================================
 # BUDGET + LIMIT CHECK
 # =====================================================
+
 
 def check_budget(memory):
 
@@ -90,6 +88,7 @@ def check_budget(memory):
 # REGISTER AI CALL + COST
 # =====================================================
 
+
 def register_ai_call(memory, estimated_cost=0.002):
 
     init_budget(memory)
@@ -104,6 +103,7 @@ def register_ai_call(memory, estimated_cost=0.002):
 # RATE LIMITER (ANTI SPAM)
 # =====================================================
 
+
 def allow_request(memory):
 
     init_budget(memory)
@@ -112,8 +112,7 @@ def allow_request(memory):
 
     # keep only last 60 seconds
     memory["budget"]["request_times"] = [
-        t for t in memory["budget"]["request_times"]
-        if now - t < 60
+        t for t in memory["budget"]["request_times"] if now - t < 60
     ]
 
     if len(memory["budget"]["request_times"]) >= MAX_REQUESTS_PER_MINUTE:
@@ -128,6 +127,7 @@ def allow_request(memory):
 # =====================================================
 # COST DISPLAY HELPER
 # =====================================================
+
 
 def get_today_cost(memory):
 

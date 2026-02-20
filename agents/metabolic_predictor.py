@@ -3,6 +3,7 @@
 # Preventive Health Intelligence
 # =====================================================
 
+
 def metabolic_predictor(memory):
 
     memory.setdefault("metabolic_alerts", [])
@@ -28,35 +29,27 @@ def metabolic_predictor(memory):
     # -----------------------------------
 
     if avg_sleep < 6 and avg_energy < 5:
-        alerts.append(
-            "😴 Fatigue risk detected. Low sleep and energy trend observed."
-        )
+        alerts.append("😴 Fatigue risk detected. Low sleep and energy trend observed.")
 
     # -----------------------------------
     # DEHYDRATION TREND
     # -----------------------------------
 
     if avg_water < 4:
-        alerts.append(
-            "💧 Hydration levels low this week. Increase water intake."
-        )
+        alerts.append("💧 Hydration levels low this week. Increase water intake.")
 
     # -----------------------------------
     # ACTIVITY DECLINE
     # -----------------------------------
 
     if exercise_days <= 1:
-        alerts.append(
-            "🏃 Activity drop detected. Body metabolism may slow."
-        )
+        alerts.append("🏃 Activity drop detected. Body metabolism may slow.")
 
     # -----------------------------------
     # RECOVERY STATE (GOOD SIGNAL)
     # -----------------------------------
 
     if avg_sleep >= 7 and avg_energy >= 7:
-        alerts.append(
-            "✅ Recovery trend strong. Your body is responding well."
-        )
+        alerts.append("✅ Recovery trend strong. Your body is responding well.")
 
     memory["metabolic_alerts"] = alerts

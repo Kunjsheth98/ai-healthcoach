@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 from core.config import client
 from core.memory import save_memory
 
-
 # --------------------------------------------------
 # SHOULD UPDATE TWIN
 # --------------------------------------------------
+
 
 def should_update_twin(memory):
 
@@ -24,6 +24,7 @@ def should_update_twin(memory):
 # --------------------------------------------------
 # GENERATE PERSONAL INSIGHTS
 # --------------------------------------------------
+
 
 def generate_health_twin(memory):
 
@@ -54,7 +55,7 @@ Find correlations such as:
 
 Return 3–5 short personalized insights starting with:
 "Your body responds well when..."
-"""
+""",
             }
         ],
     )
@@ -70,6 +71,7 @@ Return 3–5 short personalized insights starting with:
 # --------------------------------------------------
 # UI DISPLAY
 # --------------------------------------------------
+
 
 def health_twin_ui(memory):
 

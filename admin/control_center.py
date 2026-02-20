@@ -6,6 +6,7 @@ from core.budget_guard import get_today_cost
 # ADMIN CONTROL CENTER
 # ==========================================
 
+
 def admin_control_center(memory):
 
     st.title("🛠️ Admin Control Center")
@@ -44,7 +45,7 @@ def admin_control_center(memory):
         min_value=0.5,
         max_value=50.0,
         value=float(memory["admin_budget_limit"]),
-        step=0.5
+        step=0.5,
     )
 
     if st.button("💾 Save Budget"):

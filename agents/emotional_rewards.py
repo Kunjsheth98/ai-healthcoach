@@ -3,6 +3,7 @@
 # Positive Reinforcement System
 # =====================================================
 
+
 def emotional_reward_engine(memory):
 
     memory.setdefault("daily_health_log", [])
@@ -22,33 +23,25 @@ def emotional_reward_engine(memory):
     # ENERGY IMPROVEMENT
     # -----------------------------------
     if today.get("energy", 0) > yesterday.get("energy", 0):
-        rewards.append(
-            "⚡ Your energy improved today — your habits are working!"
-        )
+        rewards.append("⚡ Your energy improved today — your habits are working!")
 
     # -----------------------------------
     # SLEEP IMPROVEMENT
     # -----------------------------------
     if today.get("sleep", 0) > yesterday.get("sleep", 0):
-        rewards.append(
-            "😴 Better sleep detected. Your body is recovering well."
-        )
+        rewards.append("😴 Better sleep detected. Your body is recovering well.")
 
     # -----------------------------------
     # EXERCISE CONSISTENCY
     # -----------------------------------
     if today.get("exercise"):
-        rewards.append(
-            "🏃 Great job showing up today — consistency beats perfection!"
-        )
+        rewards.append("🏃 Great job showing up today — consistency beats perfection!")
 
     # -----------------------------------
     # HYDRATION SUCCESS
     # -----------------------------------
     if today.get("water", 0) >= 6:
-        rewards.append(
-            "💧 Hydration goal achieved today. Your body thanks you!"
-        )
+        rewards.append("💧 Hydration goal achieved today. Your body thanks you!")
 
     # -----------------------------------
     # STREAK CELEBRATION
@@ -56,8 +49,6 @@ def emotional_reward_engine(memory):
     streak = memory.get("streak_days", 0)
 
     if streak in [3, 5, 7, 10, 14, 21, 30]:
-        rewards.append(
-            f"🔥 {streak}-day streak! You're building a real health habit."
-        )
+        rewards.append(f"🔥 {streak}-day streak! You're building a real health habit.")
 
     memory["emotional_rewards"] = rewards

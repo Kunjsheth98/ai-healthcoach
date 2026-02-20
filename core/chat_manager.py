@@ -2,10 +2,10 @@ import os
 import json
 import streamlit as st
 
-
 # -----------------------------------------
 # CHAT DIRECTORY
 # -----------------------------------------
+
 
 def get_chat_dir():
     user = st.session_state.get("user")
@@ -18,6 +18,7 @@ def get_chat_dir():
 # LIST CHATS
 # -----------------------------------------
 
+
 def list_chats():
     chat_dir = get_chat_dir()
     files = os.listdir(chat_dir)
@@ -27,6 +28,7 @@ def list_chats():
 # -----------------------------------------
 # LOAD CHAT
 # -----------------------------------------
+
 
 def load_chat(chat_name):
     path = f"{get_chat_dir()}/{chat_name}.json"
@@ -41,6 +43,7 @@ def load_chat(chat_name):
 # -----------------------------------------
 # SAVE CHAT
 # -----------------------------------------
+
 
 def save_chat(chat_name, messages):
     path = f"{get_chat_dir()}/{chat_name}.json"

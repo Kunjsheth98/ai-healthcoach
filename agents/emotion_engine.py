@@ -5,6 +5,7 @@ from core.memory import save_memory
 # DETECT EMOTIONAL STATE
 # -----------------------------------------
 
+
 def detect_emotional_state(memory):
 
     score = memory["health_score"]
@@ -33,6 +34,7 @@ def detect_emotional_state(memory):
 # SHOW EMOTIONAL FEEDBACK
 # -----------------------------------------
 
+
 def emotional_feedback_ui(memory):
 
     state = memory.get("emotional_state", "balanced")
@@ -44,11 +46,7 @@ def emotional_feedback_ui(memory):
         )
 
     elif state == "winning":
-        st.success(
-            "🔥 Amazing consistency! Your habits are improving steadily."
-        )
+        st.success("🔥 Amazing consistency! Your habits are improving steadily.")
 
     elif state == "challenger":
-        st.info(
-            "🚀 You're performing very well. Ready to level up your routine?"
-        )
+        st.info("🚀 You're performing very well. Ready to level up your routine?")

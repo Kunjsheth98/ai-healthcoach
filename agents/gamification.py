@@ -2,10 +2,10 @@ import streamlit as st
 from datetime import datetime, timedelta
 from core.memory import save_memory
 
-
 # --------------------------------------------------
 # UPDATE STREAK
 # --------------------------------------------------
+
 
 def update_streak(memory):
 
@@ -33,6 +33,7 @@ def update_streak(memory):
 # XP SYSTEM
 # --------------------------------------------------
 
+
 def add_xp(memory):
 
     xp_gain = 10
@@ -57,6 +58,7 @@ def add_xp(memory):
 # LEVEL SYSTEM
 # --------------------------------------------------
 
+
 def update_level(memory):
 
     xp = memory["xp_points"]
@@ -68,6 +70,7 @@ def update_level(memory):
 # --------------------------------------------------
 # UI DISPLAY
 # --------------------------------------------------
+
 
 def gamification_ui(memory):
 

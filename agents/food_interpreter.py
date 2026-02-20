@@ -20,17 +20,15 @@ def detect_indian_food(text):
             # detect quantity (default = 1)
             quantity = 1
 
-            match = re.search(r'(\d+)\s*' + food, text)
+            match = re.search(r"(\d+)\s*" + food, text)
             if match:
                 quantity = int(match.group(1))
 
             calories = info["calories"] * quantity
 
-            foods_found.append({
-                "food": food,
-                "quantity": quantity,
-                "calories": calories
-            })
+            foods_found.append(
+                {"food": food, "quantity": quantity, "calories": calories}
+            )
 
             total_calories += calories
 

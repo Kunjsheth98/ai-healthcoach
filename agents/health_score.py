@@ -1,5 +1,6 @@
 from core.memory import save_memory
 
+
 def calculate_health_score(memory):
 
     score = 50
