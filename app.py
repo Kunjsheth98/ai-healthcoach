@@ -116,14 +116,14 @@ st.caption(f"Logged in as: {st.session_state.user}")
 # =====================================================
 ADMIN_USERS = ["demo"]
 
-tabs = ["🏠 Dashboard", "💬 Coach", "📊 Insights", "🧭 Planner", "🗂️ Records"]
+tabs = ["🏠 Dashboard", "💬 Coach", "🧠 Mental", "📊 Insights", "🧭 Planner", "🗂️ Records"]
 
 if st.session_state.user in ADMIN_USERS:
     tabs.append("🛠️ Admin")
 
 all_tabs = st.tabs(tabs)
 
-tab_dashboard, tab_chat, tab_insights, tab_planner, tab_records = all_tabs[:5]
+tab_dashboard, tab_chat, tab_mental, tab_insights, tab_planner, tab_records = all_tabs[:6]
 
 if st.session_state.user in ADMIN_USERS:
     tab_admin = all_tabs[5]
@@ -291,12 +291,22 @@ with tab_dashboard:
         for entry in memory["daily_food_log"]
     )
     c5.metric("🍛 Food Calories", food_calories_today)
+    # ---------------- MENTAL HEALTH SECTION ----------------
+    if has_premium_access("mental_engine"):
 
-    def progress_ring(value, max_value, label):
-        percent = min(value/max_value,1)
-        angle = percent*360
+        st.divider()
+        st.subheader("🧠 Mental Health")
 
-        st.markdown(f"""
+        m1, m2, m3 = st.columns(3)
+
+        m1.metric("Stress Index", memory.get("stress_index", 5))
+        m2.metric("Anxiety Index", memory.get("anxiety_index", 5))
+        m3.metric("Burnout Risk", memory.get("burnout_risk_level", 0))
+        def progress_ring(value, max_value, label):
+            percent = min(value/max_value,1)
+            angle = percent*360
+
+            st.markdown(f"""
             <div style="
                 width:120px;height:120px;border-radius:50%;
                 background:conic-gradient(#22c55e {angle}deg,#1f2937 {angle}deg);
@@ -507,7 +517,29 @@ with tab_chat:
         if "last_reply" in st.session_state:
             speak_text(st.session_state.last_reply,language)
 
+with tab_mental:
 
+    if has_premium_access("mental_engine"):
+
+        st.subheader("🧠 Advanced Mental Health Intelligence")
+
+        col1, col2 = st.columns(2)
+
+        col1.metric("Mental Score", memory.get("mental_score", 50))
+        col1.metric("Resilience Score", memory.get("resilience_score", 50))
+
+        col2.metric("Stress Index", memory.get("stress_index", 5))
+        col2.metric("Anxiety Index", memory.get("anxiety_index", 5))
+
+        st.metric("Motivation Level", memory.get("motivation_level", 5))
+        st.metric("Burnout Risk", memory.get("burnout_risk_level", 0))
+
+        if memory.get("mental_history"):
+            st.subheader("Recent Mental Trends")
+            st.write(memory["mental_history"][-5:])
+
+    else:
+        premium_lock()
 
 
 with tab_insights:

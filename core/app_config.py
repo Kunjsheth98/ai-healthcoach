@@ -18,4 +18,5 @@ PREMIUM_FEATURES = {
     "movement_coach": True,
     "weekly_story": True,
     "smart_scheduler": True,
+    "mental_engine": True,
 }
