@@ -577,14 +577,14 @@ with tab_insights:
             sleep_values = [d.get("sleep", 0) for d in sleep_log]
             mental_scores = [m.get("mental_score", 50) for m in mental_log]
 
-        if len(sleep_values) == len(mental_scores):
+            if len(sleep_values) == len(mental_scores):
 
-            fig, ax = plt.subplots()
-            ax.plot(sleep_values, label="Sleep")
-            ax.plot(mental_scores, label="Mental Score")
-            ax.legend()
+                fig, ax = plt.subplots()
+                ax.plot(sleep_values, label="Sleep")
+                ax.plot(mental_scores, label="Mental Score")
+                ax.legend()
 
-            st.pyplot(fig)        
+                st.pyplot(fig)        
 
     show_health_chart(memory)
     habit_insight_ui(memory)
