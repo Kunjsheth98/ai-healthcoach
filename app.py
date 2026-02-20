@@ -44,6 +44,11 @@ from agents.behavior_brain import behavior_brain
 from agents.health_identity import classify_health_identity
 from agents.pattern_reflection import generate_pattern_reflection
 from agents.future_projection import generate_future_projection
+from agents.medicine_reminder import medicine_reminder_agent
+
+from agents.voice_engine import speak_text
+from agents.body_composition import calculate_body_fat
+
 
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
@@ -128,24 +133,44 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 with tab_dashboard:
 
-    # ================= FIRST TIME ONBOARDING =================
+# ================= CLEAN STRUCTURED ONBOARDING =================
 
-    if not memory.get("identity_profile_created"):
+    if not memory.get("onboarding_complete"):
 
-        st.subheader("🧬 Let's Personalize Your Health Journey")
+        st.subheader("🧬 Let's Build Your Health Profile")
+
+        st.markdown("### 👤 Basic Information")
+
+        full_name = st.text_input("Full Name")
+        age = st.number_input("Age", 10, 100, 25)
+        gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+        height = st.number_input("Height (cm)", 100, 220, 170)
+        weight = st.number_input("Weight (kg)", 30, 200, 70)
+
+        diseases = st.multiselect(
+            "Any Known Medical Conditions?",
+            ["Diabetes", "Thyroid", "Hypertension", "PCOS", "Heart Issues", "Asthma"]
+        )
+
+        medications = st.text_input("Current Medications (optional)")
+
+        st.markdown("### 🧠 Lifestyle Profile")
 
         discipline = st.slider("How disciplined are you with routines?", 1, 10, 5)
         stress = st.slider("Current stress level?", 1, 10, 5)
+
         activity = st.selectbox("Your activity type", [
             "Sedentary (desk work)",
             "Moderately active",
             "Very active"
         ])
+
         sleep_pattern = st.selectbox("Your sleep pattern", [
             "Late sleeper",
             "Early riser",
             "Irregular"
         ])
+
         goal_type = st.selectbox("Main health goal", [
             "Fat loss",
             "Muscle gain",
@@ -156,32 +181,47 @@ with tab_dashboard:
 
         if st.button("Complete Setup"):
 
-            memory["discipline_score"] = discipline
-            memory["stress_level"] = stress
-            memory["activity_type"] = activity
-            memory["sleep_pattern"] = sleep_pattern
-            memory["health_goal"] = goal_type
+            memory["profile"] = {
+                "name": full_name,
+                "age": age,
+                "gender": gender,
+                "height_cm": height,
+                "weight_kg": weight,
+                "diseases": diseases,
+                "medications": medications
+            }
 
-            if discipline >= 8 and stress <= 4:
-                identity = "⚔️ Structured Achiever"
-            elif stress >= 7:
-                identity = "🌪 Resilient Overthinker"
-            elif activity == "Sedentary (desk work)":
-                identity = "🧠 Desk Warrior"
-            elif goal_type == "Fat loss":
-                identity = "🔥 Transformation Seeker"
-            else:
-                identity = "🌱 Adaptive Builder"
+            memory["lifestyle"] = {
+                "discipline_score": discipline,
+                "stress_level": stress,
+                "activity_type": activity,
+                "sleep_pattern": sleep_pattern,
+                "goal": goal_type
+            }
 
-            memory["health_identity"] = identity
-            memory["identity_profile_created"] = True
+            memory["onboarding_complete"] = True
 
-            st.success(f"Your Health Identity: {identity}")
+            st.success("Profile Created Successfully ✅")
             save_memory(memory)
             st.rerun()
 
         st.stop()
 
+        calculate_body_fat(memory)
+        if memory.get("body_fat_percentage"):
+            st.metric("🧬 Body Fat %", memory["body_fat_percentage"])
+
+
+        from datetime import date
+
+        today = str(date.today())
+        profile = memory.get("profile", {})
+        name = profile.get("name", st.session_state.user)
+
+        if memory.get("last_greeted_date") != today:
+            st.success(f"👋 Good to see you today, {name}!")
+            memory["last_greeted_date"] = today
+            save_memory(memory)
 
     # ---------- GRADIENT HERO ----------
     st.markdown("""
@@ -220,7 +260,6 @@ with tab_dashboard:
     st.success(memory.get("health_identity", "Not Classified Yet"))
 
 
-
     st.subheader("📱 WhatsApp Notifications")
 
     phone = st.text_input(
@@ -239,6 +278,9 @@ with tab_dashboard:
     c1, c2, c3, c4, c5 = st.columns(5)
 
     c1.metric("🧠 Health Score", memory.get("health_score", 50))
+    from core.subscription import has_premium_access
+    if has_premium_access("mental_engine"):
+        st.metric("🧠 Mental Score", memory.get("mental_score", 50))
     c2.metric("💧 Water", memory.get("water_intake", 0))
     c3.metric("⚡ Energy", memory.get("energy_level", 5))
     c4.metric("😴 Sleep", memory.get("sleep_hours", 0))
@@ -269,6 +311,8 @@ with tab_dashboard:
             <p style="text-align:center">{label}</p>
         """, unsafe_allow_html=True)
 
+
+
     r1,r2,r3 = st.columns(3)
 
     with r1:
@@ -280,6 +324,7 @@ with tab_dashboard:
     with r3:
         progress_ring(memory.get("energy_level",5),10,"Energy")
 
+        
     # ---------------- FIRST DAY HOOK ENGINE ----------------
 
     classify_health_identity(memory)
@@ -304,6 +349,9 @@ with tab_dashboard:
     nutritionist_brain(memory)
     metabolic_predictor(memory)
     behavior_brain(memory)
+    medicine_reminder_agent(memory)
+
+
 
     if memory.get("nutrition_insights"):
         st.subheader("🧠 AI Nutritionist Insights")
@@ -331,6 +379,14 @@ with tab_dashboard:
     cc3.metric("Estimated Cost", f"₹{inr}")
 
     st.divider()
+    st.subheader("📸 Upload Food Image")
+
+    food_image = st.file_uploader("Upload meal photo")
+
+    if food_image:
+            from agents.food_vision_engine import analyze_food_image
+            result = analyze_food_image(food_image, memory)
+            st.info(result)  
 
     st.subheader("Daily Check-In")
 
@@ -345,6 +401,16 @@ with tab_dashboard:
         memory["energy_level"] = energy
         memory["exercise_done"] = exercise
         memory["water_intake"] = water
+
+        # ---- Track Weight History ----
+    current_weight = memory.get("profile", {}).get("weight_kg")
+
+    if current_weight:
+        memory.setdefault("weight_history", [])
+        memory["weight_history"].append({
+            "weight": current_weight
+        })
+
 
         memory.setdefault("daily_health_log", [])
         memory["daily_health_log"].append({
@@ -380,6 +446,8 @@ with tab_dashboard:
 # (UNCHANGED — EXACT SAME AS YOUR VERSION)
 
 with tab_chat:
+    
+    reply = ""
 
     chats = list_chats()
 
@@ -401,6 +469,7 @@ with tab_chat:
         ).write(m.get("content", ""))
 
     # Chat input ALWAYS renders
+    uploaded_image = st.file_uploader("Upload image (optional)", key="chat_img")
     user_msg = st.chat_input("Ask Asha...")
 
     if user_msg:
@@ -409,7 +478,8 @@ with tab_chat:
             reply = ask_health_coach(
                 memory,
                 user_msg,
-                messages.copy()
+                messages.copy(),
+                uploaded_image
             )
         except Exception:
             # Offline fallback (no API billing)
@@ -421,10 +491,22 @@ with tab_chat:
 
         messages.append({"role": "user", "content": user_msg})
         messages.append({"role": "assistant", "content": reply})
+        st.session_state.last_reply = reply
+
 
         save_chat(chat_name, messages)
-
         st.rerun()
+        
+    language = st.selectbox(
+    "Voice Language",
+    ["en", "hi", "mr", "ta"],
+    index=0
+    )
+
+    if st.button("🔊 Hear Reply"):
+        if "last_reply" in st.session_state:
+            speak_text(st.session_state.last_reply,language)
+
 
 
 

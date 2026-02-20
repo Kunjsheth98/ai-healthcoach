@@ -28,12 +28,13 @@ from core.cost_meter import register_cost
 from agents.food_interpreter import detect_indian_food
 from agents.cooking_intelligence import calculate_indian_meal, log_meal
 
-
+from agents.mental_engine import process_mental_state, post_response_learning
+from core.subscription import has_premium_access
 # =====================================================
 # MAIN AI FUNCTION
 # =====================================================
 
-def ask_health_coach(memory, message, chat_history):
+def ask_health_coach(memory, message, chat_history, uploaded_image=None):
 
     # -------------------------------------------------
     # 🍛 INDIAN FOOD DETECTION
@@ -92,13 +93,80 @@ def ask_health_coach(memory, message, chat_history):
     # -------------------------------------------------
     if not allow_request(memory):
         return "⏳ Too many requests. Please slow down."
+    
+    # -------------------------------------------------
+    # 🧠 PREMIUM MENTAL ENGINE
+    # -------------------------------------------------
+    if has_premium_access("mental_engine"):
+        process_mental_state(memory, message)
 
     # -------------------------------------------------
-    # 🧠 PERSONALITY CONTEXT (ASHA MEMORY)
+    # 🧠 PROFILE + WEIGHT TREND CONTEXT
     # -------------------------------------------------
+
     emotion = memory.get("emotional_state", "balanced")
     personality_type = memory.get("personality_type", "adaptive")
     long_term_summary = memory.get("long_term_summary", "")
+
+    profile = memory.get("profile", {})
+    lifestyle = memory.get("lifestyle", {})
+    weight_history = memory.get("weight_history", [])
+
+    weight_trend = "No recent weight data."
+
+    if len(weight_history) >= 2:
+        first = weight_history[0]["weight"]
+        last = weight_history[-1]["weight"]
+        diff = last - first
+
+        if diff > 0:
+            weight_trend = f"User gained {diff} kg recently."
+        elif diff < 0:
+            weight_trend = f"User lost {abs(diff)} kg recently."
+        else:
+            weight_trend = "User weight stable."
+
+    profile_context = f"""
+User Name: {profile.get('name')}
+Age: {profile.get('age')}
+Gender: {profile.get('gender')}
+Height: {profile.get('height_cm')} cm
+Weight: {profile.get('weight_kg')} kg
+Diseases: {profile.get('diseases')}
+Primary Goal: {lifestyle.get('goal')}
+Activity Level: {lifestyle.get('activity_type')}
+Sleep Pattern: {lifestyle.get('sleep_pattern')}
+
+Weight Trend:
+{weight_trend}
+"""
+    future_prediction = ""
+
+    if len(weight_history) >= 2:
+        first = weight_history[0]["weight"]
+        last = weight_history[-1]["weight"]
+        diff = last - first
+
+        if diff != 0:
+            monthly_projection = diff * 4
+            future_prediction = f"If trend continues, body may change by {monthly_projection} kg in 30 days."
+
+    calorie_adjustment = ""
+
+    if "body_fat_percentage" in memory:
+        bf = memory["body_fat_percentage"]
+
+        if bf > 25:
+            calorie_adjustment = "User should follow moderate calorie deficit."
+        elif bf < 15:
+            calorie_adjustment = "User should avoid deficit and focus on strength."
+        else:
+            calorie_adjustment = "Maintain balanced calories."
+
+    mental_context = f"""
+    Stress Level: {lifestyle.get('stress_level')}
+    Emotional State: {emotion}
+    """
 
     system_prompt = f"""
 You are Asha — an Indian AI Health Coach.
@@ -107,10 +175,21 @@ User personality type: {personality_type}
 User emotional state: {emotion}
 
 Health score: {memory.get('health_score', 50)}
-Heath goal: {memory.get('health_goals','general fitness')}
 
-Long-term profile:
+User Profile:
+{profile_context}
+
+Long-term profile summary:
 {long_term_summary}
+
+Calorie Strategy:
+{calorie_adjustment}
+
+30-Day Projection:
+{future_prediction}
+
+Mental Health Context:
+{mental_context}
 
 STRICT RULES:
 - Never diagnose diseases
@@ -122,6 +201,7 @@ STRICT RULES:
     # -------------------------------------------------
     # BUILD MESSAGE HISTORY
     # -------------------------------------------------
+
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(chat_history)
     messages.append({"role": "user", "content": message})
@@ -129,6 +209,7 @@ STRICT RULES:
     # -------------------------------------------------
     # 🍛 COOKING INTELLIGENCE ENGINE
     # -------------------------------------------------
+
     foods, calories = calculate_indian_meal(memory, message)
 
     if foods:
@@ -145,8 +226,8 @@ STRICT RULES:
         )
         reply = response.choices[0].message.content
 
+
     except Exception:
-        # OFFLINE SAFE MODE
         reply = (
             "⚠️ Asha is currently in offline mode.\n\n"
             "AI responses are paused because API billing is not active.\n"
@@ -154,7 +235,13 @@ STRICT RULES:
         )
 
     # -------------------------------------------------
-    # 📊 REGISTER USAGE + COST (ALWAYS RUN)
+    # 🧠 POST RESPONSE LEARNING (OUTSIDE TRY)
+    # -------------------------------------------------
+    if has_premium_access("mental_engine"):
+        post_response_learning(memory, message, reply)
+
+    # -------------------------------------------------
+    # 📊 REGISTER USAGE + COST
     # -------------------------------------------------
 
     register_usage(memory)

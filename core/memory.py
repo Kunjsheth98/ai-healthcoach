@@ -35,6 +35,23 @@ DEFAULT_MEMORY = {
     "personality_type": "adaptive",
     "personality_score": 50,
 
+    # ================= ADVANCED MENTAL SYSTEM =================
+    "mental_score": 50,
+    "stress_index": 5,
+    "anxiety_index": 5,
+    "motivation_level": 5,
+    "emotional_volatility": 0,
+    "burnout_risk_level": 0,
+
+    "behavior_profile": {},
+    "trigger_patterns": [],
+    "coping_style": "",
+    "dominant_thought_patterns": [],
+    "resilience_score": 50,
+
+    "mental_history": [],
+    "burnout_alerts": [],
+
     # ================= GAMIFICATION =================
     "streak_days": 0,
     "last_checkin_date": "",
@@ -75,40 +92,23 @@ DEFAULT_MEMORY = {
     # LONG TERM LEARNING ENGINE
     "long_term_summary": "",
     "last_learning_update": ""
-
-
 }
 
-
-# =====================================================
-# MEMORY PATH PER USER
-# =====================================================
-
 def get_memory_path():
-
     user = st.session_state.get("user")
-
     if not user:
         return "health_memory.json"
-
     os.makedirs(f"users/{user}", exist_ok=True)
     return f"users/{user}/memory.json"
 
-
-# =====================================================
-# LOAD MEMORY
-# =====================================================
-
 def load_memory():
-
     memory_file = get_memory_path()
 
     if os.path.exists(memory_file):
-
         with open(memory_file, "r") as f:
             memory = json.load(f)
 
-        # Add missing keys automatically after updates
+        # Auto add new keys
         for key, value in DEFAULT_MEMORY.items():
             if key not in memory:
                 memory[key] = value
@@ -117,14 +117,7 @@ def load_memory():
 
     return DEFAULT_MEMORY.copy()
 
-
-# =====================================================
-# SAVE MEMORY
-# =====================================================
-
 def save_memory(memory):
-
     memory_file = get_memory_path()
-
     with open(memory_file, "w") as f:
         json.dump(memory, f, indent=4)

@@ -7,3 +7,4 @@ pillow
 requests
 python-dotenv
 twilio
+gTTS
