@@ -35,6 +35,30 @@ def choose_movement_type(memory):
 
 def movement_coach_agent(memory):
 
+    mode = memory.get("life_os_mode", "wellness")
+
+    if mode == "performance":
+        st.subheader("🧘 Exercise & Yoga Coach")
+        st.success("🔥 High Performance Workout Mode Activated.")
+        # continue normal logic
+
+    elif mode == "discipline":
+        st.subheader("🧘 Exercise & Yoga Coach")
+        st.success("💪 Structured Discipline Training Activated.")
+        # continue normal logic
+
+    elif mode == "resilience":
+        st.subheader("🧘 Exercise & Yoga Coach")
+        st.info("🧘 Emotional Resilience Session Recommended.")
+        st.success("Light yoga + breathing session.")
+        return
+
+    elif mode == "wellness":
+        st.subheader("🧘 Exercise & Yoga Coach")
+        st.info("🌿 Wellness Recovery Session.")
+        st.success("Gentle stretching and mobility today.")
+        return
+
     # ================= CENTRAL BRAIN OVERRIDE =================
     brain_mode = memory.get("brain_state", {}).get("mode")
 

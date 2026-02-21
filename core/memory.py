@@ -75,6 +75,8 @@ DEFAULT_MEMORY = {
     # LONG TERM LEARNING ENGINE
     "long_term_summary": "",
     "last_learning_update": "",
+    "life_os_mode": "auto",
+    "user_preferred_mode": "wellness",
 }
 
 

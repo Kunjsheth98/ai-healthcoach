@@ -148,12 +148,12 @@ chat_history = load_chat(st.session_state.current_chat)
 ADMIN_USERS = ["demo"]
 
 tabs = [
-    "🏠 Dashboard",
-    "💬 Coach",
-    "🧠 Mental",
-    "📊 Insights",
-    "🧭 Planner",
-    "🗂️ Records",
+    "🧠 Brain",
+    "📥 Daily Sync",
+    "🗣 Coach",
+    "📅 Planner",
+    "📊 Trends",
+    "🗂 Vault",
 ]
 
 if st.session_state.user in ADMIN_USERS:
@@ -161,9 +161,7 @@ if st.session_state.user in ADMIN_USERS:
 
 all_tabs = st.tabs(tabs)
 
-tab_dashboard, tab_chat, tab_mental, tab_insights, tab_planner, tab_records = all_tabs[
-    :6
-]
+tab_brain, tab_sync, tab_coach, tab_planner, tab_trends, tab_vault = all_tabs[:6]
 
 if st.session_state.user in ADMIN_USERS:
     tab_admin = all_tabs[5]
@@ -171,7 +169,7 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 # DASHBOARD
 # =====================================================
-with tab_dashboard:
+with tab_brain:
 
     # ================= CLEAN STRUCTURED ONBOARDING =================
 
@@ -197,7 +195,6 @@ with tab_dashboard:
         st.markdown("### 🧠 Lifestyle Profile")
 
         discipline = st.slider("How disciplined are you with routines?", 1, 10, 5)
-        stress = st.slider("Current stress level?", 1, 10, 5)
 
         activity = st.selectbox(
             "Your activity type",
@@ -233,7 +230,6 @@ with tab_dashboard:
 
             memory["lifestyle"] = {
                 "discipline_score": discipline,
-                "stress_level": stress,
                 "activity_type": activity,
                 "sleep_pattern": sleep_pattern,
                 "goal": goal_type,
@@ -305,6 +301,8 @@ with tab_dashboard:
     )
 
     st.subheader("🏷 Your Health Identity")
+    st.subheader("🧠 Life OS Mode")
+    st.info(memory.get("life_os_mode", "wellness").upper())
     st.success(memory.get("health_identity", "Not Classified Yet"))
 
     st.subheader("📱 WhatsApp Notifications")
@@ -544,7 +542,7 @@ with tab_dashboard:
 # =====================================================
 # (UNCHANGED — EXACT SAME AS YOUR VERSION)
 
-with tab_chat:
+with tab_coach:
 
     reply = ""
 
@@ -591,40 +589,8 @@ with tab_chat:
         if "last_reply" in st.session_state:
             speak_text(st.session_state.last_reply, language)
 
-with tab_mental:
 
-    if has_premium_access("mental_engine"):
-
-        st.subheader("🧠 Advanced Mental Health Intelligence")
-
-        col1, col2 = st.columns(2)
-
-        col1.metric("Mental Score", memory.get("mental_score", 50))
-        col1.metric("Resilience Score", memory.get("resilience_score", 50))
-
-        col2.metric("Stress Index", memory.get("stress_index", 5))
-        col2.metric("Anxiety Index", memory.get("anxiety_index", 5))
-
-        st.metric("Motivation Level", memory.get("motivation_level", 5))
-        st.metric("Burnout Risk", memory.get("burnout_risk_level", 0))
-        velocity = memory.get("burnout_velocity", 0)
-        if velocity >= 2:
-            st.error("🚨 Burnout increasing rapidly. Recovery needed.")
-        elif velocity > 0:
-            st.warning("⚠ Burnout slightly increasing. Monitor workload.")
-        st.metric("Mood Volatility", memory.get("mood_volatility", 0))
-        st.metric("Sleep-Mood Correlation", memory.get("sleep_mood_correlation", 0))
-        st.metric("AI Personality Mode", memory.get("personality_type", "Balanced Guide"))
-
-        if memory.get("mental_history"):
-            st.subheader("Recent Mental Trends")
-            st.write(memory["mental_history"][-5:])
-
-    else:
-        premium_lock()
-
-
-with tab_insights:
+with tab_trends:
 
     # ---------------- MENTAL SCORE GRAPH ----------------
     if has_premium_access("mental_engine"):
@@ -688,7 +654,7 @@ with tab_planner:
     else:
         premium_lock()
 
-with tab_records:
+with tab_vault:
     health_record_vault()
     st.divider()
     prescription_reader_ui(memory)

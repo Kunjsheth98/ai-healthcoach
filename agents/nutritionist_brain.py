@@ -6,6 +6,29 @@ import streamlit as st
 
 
 def nutritionist_brain(memory):
+
+    mode = memory.get("life_os_mode", "wellness")
+
+    if mode == "performance":
+        st.subheader("🥗 AI Nutritionist")
+        st.success("🔥 Performance Nutrition Mode: Higher protein + structured meals.")
+        return
+
+    elif mode == "discipline":
+        st.subheader("🥗 AI Nutritionist")
+        st.success("📊 Strict calorie control + macro tracking.")
+        return
+
+    elif mode == "resilience":
+        st.subheader("🥗 AI Nutritionist")
+        st.success("🧠 Stress support nutrition: hydration + balanced carbs.")
+        return
+
+    elif mode == "wellness":
+        st.subheader("🥗 AI Nutritionist")
+        st.success("🌿 Balanced and sustainable eating.")
+        return
+
      # ================= CENTRAL BRAIN OVERRIDE =================
     brain_mode = memory.get("brain_state", {}).get("mode")
 

@@ -178,6 +178,18 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     elif mood_trend == "improving":
         tone = "celebratory and encouraging"
 
+    # ================= LIFE OS MODE OVERRIDE =================
+    mode = memory.get("life_os_mode", "wellness")
+
+    if mode == "performance":
+        tone = "focused, goal-driven and high performance"
+    elif mode == "discipline":
+        tone = "firm, structured and accountability-focused"
+    elif mode == "resilience":
+        tone = "supportive and emotionally grounding"
+    elif mode == "wellness":
+        tone = "calm, balanced and recovery-oriented"    
+
     brain_state = memory.get("brain_state", {}).get("mode")
 
     if brain_state == "recovery_lock":
