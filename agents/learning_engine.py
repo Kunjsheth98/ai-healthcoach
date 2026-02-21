@@ -88,6 +88,63 @@ def analyze_mood_trend(memory):
     save_memory(memory)
 
     analyze_mood_trend(memory)
+
+def calculate_burnout_velocity(memory):
+
+    mood_log = memory.get("emotional_event_log", [])
+
+    if len(mood_log) < 5:
+        return
+
+    last_five = mood_log[-5:]
+
+    moods = [entry["mood"] for entry in last_five]
+    sleeps = [entry["sleep"] for entry in last_five]
+
+    mood_drop = moods[0] - moods[-1]
+    avg_sleep = sum(sleeps) / len(sleeps)
+
+    velocity_score = 0
+
+    if mood_drop > 2:
+        velocity_score += 2
+
+    if avg_sleep < 6:
+        velocity_score += 2
+
+    memory["burnout_velocity"] = velocity_score
+
+def calculate_mood_volatility(memory):
+
+    mood_log = memory.get("emotional_event_log", [])
+
+    if len(mood_log) < 5:
+        return
+
+    moods = [entry["mood"] for entry in mood_log[-7:]]
+
+    mean = sum(moods) / len(moods)
+    variance = sum((m - mean) ** 2 for m in moods) / len(moods)
+
+    memory["mood_volatility"] = round(variance, 2)
+
+def analyze_sleep_mood_correlation(memory):
+
+    mood_log = memory.get("emotional_event_log", [])
+
+    if len(mood_log) < 5:
+        return
+
+    low_sleep_bad_mood = 0
+
+    for entry in mood_log[-7:]:
+        if entry["sleep"] < 6 and entry["mood"] <= 4:
+            low_sleep_bad_mood += 1
+
+    if low_sleep_bad_mood >= 3:
+        memory["sleep_mood_correlation"] = "strong"
+    else:
+        memory["sleep_mood_correlation"] = "weak"        
 # --------------------------------------------------
 # UI DISPLAY
 # --------------------------------------------------
@@ -96,6 +153,10 @@ def learning_engine_ui(memory):
 
     if should_update_learning(memory):
         generate_long_term_summary(memory)
+        analyze_mood_trend(memory)
+        calculate_burnout_velocity(memory)
+        calculate_mood_volatility(memory)
+        analyze_sleep_mood_correlation(memory)
 
     if memory.get("long_term_summary"):
         st.subheader("🧠 AI Learned About You")

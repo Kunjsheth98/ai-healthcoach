@@ -32,6 +32,7 @@ from agents.behavioral_core import (
     predict_risk,
     evolve_personality,
 )
+from agents.predictive_burnout_engine import predictive_burnout_core
 # =====================================================
 # MAIN AI FUNCTION
 # =====================================================
@@ -103,7 +104,6 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     # -------------------------------------------------
 
     emotion = memory.get("emotional_state", "balanced")
-    personality_type = memory.get("personality_type", "adaptive")
     long_term_summary = memory.get("long_term_summary", "")
 
     profile = memory.get("profile", {})
@@ -111,7 +111,17 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     weight_history = memory.get("weight_history", [])
 
     weight_trend = "No recent weight data."
-
+    profile_context = f"""
+    User Name: {profile.get('name')}
+    Age: {profile.get('age')}
+    Gender: {profile.get('gender')}
+    Height: {profile.get('height_cm')} cm
+    Weight: {profile.get('weight_kg')} kg
+    Diseases: {profile.get('diseases')}
+    Primary Goal: {lifestyle.get('goal')}
+    Activity Level: {lifestyle.get('activity_type')}
+    Sleep Pattern: {lifestyle.get('sleep_pattern')}
+    """
     if len(weight_history) >= 2:
         first = weight_history[0]["weight"]
         last = weight_history[-1]["weight"]
@@ -123,21 +133,9 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
             weight_trend = f"User lost {abs(diff)} kg recently."
         else:
             weight_trend = "User weight stable."
+    profile_context += f"\nWeight Trend:\n{weight_trend}"      
 
-    profile_context = f"""
-User Name: {profile.get('name')}
-Age: {profile.get('age')}
-Gender: {profile.get('gender')}
-Height: {profile.get('height_cm')} cm
-Weight: {profile.get('weight_kg')} kg
-Diseases: {profile.get('diseases')}
-Primary Goal: {lifestyle.get('goal')}
-Activity Level: {lifestyle.get('activity_type')}
-Sleep Pattern: {lifestyle.get('sleep_pattern')}
-
-Weight Trend:
-{weight_trend}
-"""
+        
     future_prediction = ""
 
     if len(weight_history) >= 2:
@@ -165,27 +163,51 @@ Weight Trend:
     Stress Level: {lifestyle.get('stress_level')}
     Emotional State: {emotion}
     """
+    burnout = memory.get("burnout_risk_level", 0)
+    stress = memory.get("stress_index", 5)
+    mood_trend = memory.get("mood_trend", "stable")
+    
     tone = "balanced"
+    
+    if burnout >= 7:
+        tone = "calm, slow, grounding and recovery-focused"
+    elif stress >= 7:
+        tone = "reassuring and emotionally supportive"
+    elif mood_trend == "declining":
+        tone = "empathetic and motivational"
+    elif mood_trend == "improving":
+        tone = "celebratory and encouraging"
 
-    if memory.get("stress_index", 5) >= 7:
-        tone = "calm and reassuring"
+    brain_state = memory.get("brain_state", {}).get("mode")
 
-    elif memory.get("motivation_level", 5) <= 3:
-        tone = "encouraging and energizing"
-
-    elif memory.get("personality_type") == "disciplined":
-        tone = "structured and direct"
-
+    if brain_state == "recovery_lock":
+        tone = "calm, slow, grounding and recovery-focused"
+    elif brain_state == "load_reduction":
+        tone = "supportive, controlled and balanced"
+    elif brain_state == "preventive_care":
+        tone = "encouraging but mindful"    
 # ---------------- PHASE 2 BEHAVIOR UPDATE ----------------
     update_behavioral_patterns(memory)
     predict_risk(memory)
     evolve_personality(memory)
+    predictive_burnout_core(memory)
+
+    personality = memory.get("personality_type", "Balanced Guide")
+    volatility = memory.get("mood_volatility", 0)
+    correlation = memory.get("sleep_mood_correlation", 0)
+
+    intelligence_layer = f"""
+    Mood Volatility: {volatility}
+    Sleep-Mood Correlation: {correlation}
+    Active Personality Mode: {personality}
+    """
 
     system_prompt = f"""
 You are Asha — an Indian AI Health Coach.
 Your tone should be {tone}.
-
-User personality type: {personality_type}
+Behavior Intelligence:
+{intelligence_layer}
+User personality type: {personality}
 User emotional state: {emotion}
 
 Health score: {memory.get('health_score', 50)}
@@ -204,7 +226,7 @@ Calorie Strategy:
 
 Mental Health Context:
 {mental_context}
-
+Mood Trend: {memory.get('mood_trend', 'stable')}
 Behavior Patterns:
 {memory.get("behavior_patterns")}
 
@@ -244,7 +266,10 @@ STRICT RULES:
     model="gpt-4o-mini", messages=messages  # type: ignore
     )
         reply = response.choices[0].message.content or ""
+        engagement = memory.get("engagement_score", 0)
 
+        if engagement % 3 == 0 and engagement != 0:
+            reply += "\n\n🔥 You're building strong momentum. Keep showing up."
     except Exception:
         reply = (
             "⚠️ Asha is currently in offline mode.\n\n"

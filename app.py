@@ -109,6 +109,38 @@ memory = load_memory()
 st.title("🩺 AI HealthCoach")
 st.caption(f"Logged in as: {st.session_state.user}")
 
+# ================= CHAT SIDEBAR =================
+
+import uuid
+
+st.sidebar.title("🧠 Your Health Plans")
+
+# Load existing chats
+chats = list_chats()
+
+# Create new chat
+if st.sidebar.button("➕ New Health Plan"):
+    new_chat_id = str(uuid.uuid4())
+    save_chat(new_chat_id, [])
+    st.session_state.current_chat = new_chat_id
+
+# Initialize current chat
+if "current_chat" not in st.session_state:
+    if chats:
+        st.session_state.current_chat = chats[0]
+    else:
+        first_chat = str(uuid.uuid4())
+        save_chat(first_chat, [])
+        st.session_state.current_chat = first_chat
+
+# Display chat list
+for chat_id in chats:
+    if st.sidebar.button(f"📂 {chat_id[:8]}", key=chat_id):
+        st.session_state.current_chat = chat_id
+
+# Load chat history
+chat_history = load_chat(st.session_state.current_chat)
+
 # =====================================================
 # ADMIN USERS
 # =====================================================
@@ -314,6 +346,12 @@ with tab_dashboard:
         m2.metric("Anxiety Index", memory.get("anxiety_index", 5))
         m3.metric("Burnout Risk", memory.get("burnout_risk_level", 0))
 
+        burnout = memory.get("burnout_risk_level", 0)
+        if burnout >= 7:
+            st.error("🚨 High Burnout Risk Detected. Immediate recovery protocol recommended.")
+        elif burnout >= 4:
+            st.warning("⚠ Moderate Burnout Signals. Reduce workload and increase recovery.")
+
     if memory.get("burnout_risk_level", 0) >= 7:
         st.error("⚠️ High Burnout Risk Detected. Consider rest and stress reset.")
     elif memory.get("burnout_risk_level", 0) >= 4:
@@ -321,7 +359,17 @@ with tab_dashboard:
 
     if memory.get("risk_forecast"):
         prob = memory["risk_forecast"].get("burnout_probability", 0)
-        st.info(f"🧠 Burnout Prediction Risk: {int(prob*100)}%")    
+        st.info(f"🧠 Burnout Prediction Risk: {int(prob*100)}%")   
+
+        brain = memory.get("brain_state", {})
+        mode = brain.get("mode", "performance_mode")
+
+        st.subheader("🧠 AI Brain Status")
+        st.info(f"Mode: {mode}")
+
+        forecast = memory.get("risk_forecast", {})
+        st.metric("Burnout Forecast", f"{int(forecast.get('burnout_probability',0)*100)}%")
+        st.caption(f"Trigger: {forecast.get('primary_trigger','Stable')}") 
 
     def progress_ring(value, max_value, label):
             percent = min(value / max_value, 1)
@@ -348,7 +396,10 @@ with tab_dashboard:
     r1, r2, r3 = st.columns(3)
 
     with r1:
-        progress_ring(memory.get("sleep_hours", 0), 8, "Sleep")
+        sleep_hours = memory.get("sleep_hours", 0)
+        # Cap sleep at 7 for scoring psychology
+        sleep_score = min(sleep_hours, 7)
+        progress_ring(sleep_score, 7, "Sleep")
 
     with r2:
         progress_ring(memory.get("water_intake", 0), 8, "Hydration")
@@ -424,8 +475,10 @@ with tab_dashboard:
     mood = st.slider("Mood Today (1 = Very Low, 10 = Excellent)", 
                  1, 10, 
                  memory.get("daily_mood", 5))
+    
     exercise = st.checkbox("Exercise done", memory.get("exercise_done", False))
     water = st.number_input("Water glasses", 0, 20, memory.get("water_intake", 0))
+
 
     if st.button("Save Check-In"):
         memory["daily_mood"] = mood
@@ -440,6 +493,12 @@ with tab_dashboard:
         memory["exercise_done"] = exercise
         memory["water_intake"] = water
 
+        memory["engagement_score"] = memory.get("engagement_score", 0) + 1
+
+        add_xp(memory)
+        update_streak(memory)
+        if memory["engagement_score"] % 5 == 0:
+            st.success("🔥 Amazing consistency! Your future self is proud of you.")
         # ---- Track Weight History ----
     current_weight = memory.get("profile", {}).get("weight_kg")
 
@@ -457,6 +516,12 @@ with tab_dashboard:
         add_xp(memory)
 
         st.success("Check-in saved!")
+
+        memory["xp"] = memory.get("xp", 0) + 10
+        if memory["xp"] >= 100:
+            st.balloons()
+            st.success("🏆 Level Up! You are evolving into a disciplined version of yourself.")
+            memory["xp"] = 0
 
     emotional_reward_engine(memory)
 
@@ -540,6 +605,14 @@ with tab_mental:
 
         st.metric("Motivation Level", memory.get("motivation_level", 5))
         st.metric("Burnout Risk", memory.get("burnout_risk_level", 0))
+        velocity = memory.get("burnout_velocity", 0)
+        if velocity >= 2:
+            st.error("🚨 Burnout increasing rapidly. Recovery needed.")
+        elif velocity > 0:
+            st.warning("⚠ Burnout slightly increasing. Monitor workload.")
+        st.metric("Mood Volatility", memory.get("mood_volatility", 0))
+        st.metric("Sleep-Mood Correlation", memory.get("sleep_mood_correlation", 0))
+        st.metric("AI Personality Mode", memory.get("personality_type", "Balanced Guide"))
 
         if memory.get("mental_history"):
             st.subheader("Recent Mental Trends")

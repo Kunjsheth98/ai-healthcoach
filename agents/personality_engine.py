@@ -41,6 +41,19 @@ def update_personality_identity(memory):
 
     save_memory(memory)
 
+def evolve_personality(memory):
+    volatility = memory.get("mood_volatility", 0)
+    burnout = memory.get("burnout_risk_level", 0)
+    engagement = memory.get("engagement_score", 0)
+
+    if burnout >= 7:
+        memory["personality_type"] = "Protector"
+    elif volatility > 3:
+        memory["personality_type"] = "Emotional Stabilizer"
+    elif engagement > 20:
+        memory["personality_type"] = "Performance Coach"
+    else:
+        memory["personality_type"] = "Balanced Guide"
 
 # -----------------------------------------
 # SHOW PERSONALITY UI

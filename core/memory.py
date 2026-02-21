@@ -10,6 +10,7 @@ DEFAULT_MEMORY = {
     "name": "",
     "health_goals": "",
     "phone_number": "",
+    "onboarding_complete": False,
     # Health metrics
     "health_score": 50,
     "water_intake": 0,

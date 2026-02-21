@@ -32,32 +32,37 @@ def generate_weekly_story(memory):
         return
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
-You are a friendly Indian AI Health Coach.
+    model="gpt-4o-mini",
+    messages=[
+        {
+            "role": "system",
+            "content": f"""
+You are an advanced Indian AI Health Coach.
 
-Create a SHORT motivational weekly health story.
+Create a SHORT intelligent weekly behavioral report.
 
-User stats:
-Health score: {memory['health_score']}
-Energy: {memory['energy_level']}
-Sleep: {memory['sleep_hours']}
-Water intake: {memory['water_intake']}
-Mood Trend: {memory.get('mood_trend', 'stable')}
+User Data:
+Health score: {memory.get('health_score')}
+Energy: {memory.get('energy_level')}
+Sleep: {memory.get('sleep_hours')}
+Water intake: {memory.get('water_intake')}
+
+Mood trend: {memory.get('mood_trend', 'stable')}
+Burnout velocity: {memory.get('burnout_velocity', 0)}
+Mood volatility index: {memory.get('mood_volatility', 0)}
+Sleep-Mood correlation: {memory.get('sleep_mood_correlation', 'weak')}
 
 Explain:
-- improvement
-- concern areas
-- encouragement for next week
+- Behavioral pattern observed
+- Risk level
+- Positive reinforcement
+- 1 specific improvement strategy for next week
 
-Write emotionally and positively.
-""",
-            }
-        ],
-    )
+Make it intelligent, not generic.
+"""
+        }
+    ],
+)
 
     story = response.choices[0].message.content
 

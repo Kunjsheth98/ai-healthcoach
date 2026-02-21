@@ -4,8 +4,17 @@ from core.config import client
 
 
 def autonomous_planner_agent(memory):
+    brain_mode = memory.get("brain_state", {}).get("mode")
 
-    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
+    if brain_mode == "recovery_lock":
+        return "⚠ Recovery Mode Activated. Focus on light activity and stress reset."
+
+    if brain_mode == "load_reduction":
+        # reduce intensity by 30%
+        intensity_modifier = 0.7
+    else:
+        intensity_modifier = 1
+        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",

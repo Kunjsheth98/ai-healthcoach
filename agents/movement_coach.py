@@ -35,6 +35,21 @@ def choose_movement_type(memory):
 
 def movement_coach_agent(memory):
 
+    # ================= CENTRAL BRAIN OVERRIDE =================
+    brain_mode = memory.get("brain_state", {}).get("mode")
+
+    if brain_mode == "recovery_lock":
+        st.subheader("🧘 Exercise & Yoga Coach")
+        st.warning("⚠ Recovery Mode Activated by AI Brain")
+        st.success("Today focus on deep breathing, light stretching and 20 min slow walk.")
+        return
+
+    if brain_mode == "load_reduction":
+        st.subheader("🧘 Exercise & Yoga Coach")
+        st.info("⚠ Reduced Intensity Mode Activated")
+        st.success("Do 15 min light yoga or mobility. Avoid heavy workouts today.")
+        return
+    
     movement_type = choose_movement_type(memory)
 
     prompts = {

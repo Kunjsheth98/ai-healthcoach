@@ -37,7 +37,10 @@ def process_mental_state(memory, message):
 
     if memory["stress_index"] > 7 and memory["motivation_level"] < 4:
         memory["burnout_risk_level"] = min(memory["burnout_risk_level"] + 1, 10)
-
+        calculate_burnout_velocity(memory)
+        calculate_mood_volatility(memory)
+        calculate_sleep_mood_correlation(memory)
+        
     memory["mental_score"] = max(
         0,
         100
@@ -52,9 +55,9 @@ def process_mental_state(memory, message):
             "stress": memory["stress_index"],
             "anxiety": memory["anxiety_index"],
             "motivation": memory["motivation_level"],
+            "burnout_risk_level": memory.get("burnout_risk_level", 0)
         }
     )
-
 
 def post_response_learning(memory, user_message, ai_reply):
 
@@ -64,3 +67,55 @@ def post_response_learning(memory, user_message, ai_reply):
 
     if "this helps" in user_message.lower():
         memory["mental_score"] = min(memory["mental_score"] + 2, 100)
+
+def calculate_burnout_velocity(memory):
+    history = memory.get("mental_history", [])
+
+    if len(history) < 3:
+        return 0
+
+    last = history[-1].get("burnout_risk_level", 0)
+    prev = history[-2].get("burnout_risk_level", 0)
+
+    velocity = last - prev
+
+    memory["burnout_velocity"] = velocity
+    return velocity  
+
+def calculate_mood_volatility(memory):
+    log = memory.get("emotional_event_log", [])
+
+    if len(log) < 5:
+        memory["mood_volatility"] = 0
+        return 0
+
+    moods = [entry.get("mood", 5) for entry in log[-7:]]
+
+    diffs = []
+    for i in range(1, len(moods)):
+        diffs.append(abs(moods[i] - moods[i - 1]))
+
+    volatility = round(sum(diffs) / len(diffs), 2)
+
+    memory["mood_volatility"] = volatility
+    return volatility          
+
+def calculate_sleep_mood_correlation(memory):
+    log = memory.get("emotional_event_log", [])
+
+    if len(log) < 5:
+        memory["sleep_mood_correlation"] = 0
+        return 0
+
+    sleep_values = [entry.get("sleep", 0) for entry in log[-7:]]
+    mood_values = [entry.get("mood", 5) for entry in log[-7:]]
+
+    avg_sleep = sum(sleep_values) / len(sleep_values)
+    avg_mood = sum(mood_values) / len(mood_values)
+
+    correlation = 0
+    for s, m in zip(sleep_values, mood_values):
+        correlation += (s - avg_sleep) * (m - avg_mood)
+
+    memory["sleep_mood_correlation"] = round(correlation, 2)
+    return correlation

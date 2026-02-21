@@ -1,3 +1,4 @@
+import streamlit as st
 # =====================================================
 # AI NUTRITIONIST BRAIN
 # Weekly Indian Diet Intelligence
@@ -5,7 +6,31 @@
 
 
 def nutritionist_brain(memory):
+     # ================= CENTRAL BRAIN OVERRIDE =================
+    brain_mode = memory.get("brain_state", {}).get("mode")
 
+    if brain_mode == "recovery_lock":
+        st.subheader("🥗 AI Nutritionist")
+        st.warning("⚠ Recovery Nutrition Mode")
+        st.success("""
+    Today focus on:
+    - Hydration (3L water)
+    - Magnesium rich foods (banana, nuts)
+    - Avoid aggressive calorie deficit
+    - Balanced carbs for stress recovery
+    """)
+        return
+    
+    if brain_mode == "load_reduction":
+        st.subheader("🥗 AI Nutritionist")
+        st.info("⚠ Moderate Nutrition Mode")
+        st.success("""
+Maintain balanced calories.
+Avoid heavy fasting.
+Increase protein and hydration.
+""")
+        return
+    
     memory.setdefault("daily_food_log", [])
     memory.setdefault("nutrition_insights", [])
 
