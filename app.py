@@ -48,6 +48,7 @@ from agents.medicine_reminder import medicine_reminder_agent
 
 from agents.voice_engine import speak_text
 from agents.body_composition import calculate_body_fat
+from agents.daily_neural_sync import daily_neural_sync
 
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
@@ -500,20 +501,21 @@ with tab_dashboard:
         if memory["engagement_score"] % 5 == 0:
             st.success("🔥 Amazing consistency! Your future self is proud of you.")
         # ---- Track Weight History ----
-    current_weight = memory.get("profile", {}).get("weight_kg")
+        current_weight = memory.get("profile", {}).get("weight_kg")
 
-    if current_weight:
-        memory.setdefault("weight_history", [])
-        memory["weight_history"].append({"weight": current_weight})
+        if current_weight:
+            memory.setdefault("weight_history", [])
+            memory["weight_history"].append({"weight": current_weight})
 
-        memory.setdefault("daily_health_log", [])
-        memory["daily_health_log"].append(
-            {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
-        )
+            memory.setdefault("daily_health_log", [])
+            memory["daily_health_log"].append(
+             {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
+            )
 
         calculate_health_score(memory)
         update_streak(memory)
         add_xp(memory)
+        daily_neural_sync(memory)
 
         st.success("Check-in saved!")
 
