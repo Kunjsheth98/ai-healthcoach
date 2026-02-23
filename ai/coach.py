@@ -163,46 +163,60 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     Stress Level: {lifestyle.get('stress_level')}
     Emotional State: {emotion}
     """
-    burnout = memory.get("burnout_risk_level", 0)
-    stress = memory.get("stress_index", 5)
-    mood_trend = memory.get("mood_trend", "stable")
-    
+    brain = memory.get("brain_state", {})
+    brain_mode = brain.get("mode", "wellness")
+    intervention = brain.get("intervention", "normal")
+
     tone = "balanced"
-    
-    if burnout >= 7:
+
+    if intervention == "force_recovery":
         tone = "calm, slow, grounding and recovery-focused"
-    elif stress >= 7:
-        tone = "reassuring and emotionally supportive"
-    elif mood_trend == "declining":
-        tone = "empathetic and motivational"
-    elif mood_trend == "improving":
-        tone = "celebratory and encouraging"
 
-    # ================= LIFE OS MODE OVERRIDE =================
-    mode = memory.get("life_os_mode", "wellness")
+    elif intervention == "intensity_reduction":
+        tone = "supportive, structured and balanced"
 
-    if mode == "performance":
-        tone = "focused, goal-driven and high performance"
-    elif mode == "discipline":
-        tone = "firm, structured and accountability-focused"
-    elif mode == "resilience":
-        tone = "supportive and emotionally grounding"
-    elif mode == "wellness":
-        tone = "calm, balanced and recovery-oriented"    
+    else:
+        if brain_mode == "performance":
+            tone = "focused, goal-driven and high performance"
+        elif brain_mode == "discipline":
+            tone = "firm, structured and accountability-focused"
+        elif brain_mode == "resilience":
+            tone = "supportive and emotionally grounding"
+        else:
+            tone = "calm, balanced and wellness-oriented"   
 
-    brain_state = memory.get("brain_state", {}).get("mode")
+    suppression = memory.get("suppression_state", "none")
 
-    if brain_state == "recovery_lock":
-        tone = "calm, slow, grounding and recovery-focused"
-    elif brain_state == "load_reduction":
-        tone = "supportive, controlled and balanced"
-    elif brain_state == "preventive_care":
-        tone = "encouraging but mindful"    
+    if suppression == "high":
+        tone = "calm, grounding and pressure-free"
+    elif suppression == "moderate":
+        tone = "supportive and balanced"       
 # ---------------- PHASE 2 BEHAVIOR UPDATE ----------------
     update_behavioral_patterns(memory)
     predict_risk(memory)
     evolve_personality(memory)
     predictive_burnout_core(memory)
+    from agents.personality_engine import evolve_personality_from_habits
+    evolve_personality_from_habits(memory)
+
+# ---------------- CENTRAL COACH AUTHORITY ----------------
+    burnout = memory.get("burnout_risk_level", 0)
+
+    if burnout >= 7:
+        memory["brain_state"] = {
+            "mode": "recovery_lock",
+            "intervention": "force_recovery"
+        }
+    elif burnout >= 4:
+        memory["brain_state"] = {
+            "mode": memory.get("life_os_mode", "wellness"),
+            "intervention": "intensity_reduction"
+        }
+    else:
+        memory["brain_state"] = {
+            "mode": memory.get("life_os_mode", "wellness"),
+            "intervention": "normal"
+        }
 
     personality = memory.get("personality_type", "Balanced Guide")
     volatility = memory.get("mood_volatility", 0)
@@ -213,10 +227,50 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     Sleep-Mood Correlation: {correlation}
     Active Personality Mode: {personality}
     """
+    # =========================================
+    # FIRST 3 INTERACTION INTELLIGENCE BOOST
+    # =========================================
 
+    interaction_count = memory.get("interaction_count", 0)
+    memory["interaction_count"] = interaction_count + 1
+
+    boost_instruction = ""
+
+    if interaction_count < 3:
+        boost_instruction = """
+You are in onboarding intelligence mode.
+
+This is one of the first 3 interactions.
+
+Do these things:
+
+1. Infer the user's main goal.
+2. Infer their energy pattern.
+3. Infer stress pattern if visible.
+4. Infer personality tone (disciplined, emotional, analytical, etc.)
+
+Then say:
+
+"Here’s what I understand about you so far..."
+
+Summarize briefly.
+
+Then ask ONE sharp, intelligent reflective question.
+
+Make the user feel deeply seen.
+"""
+    else:
+        boost_instruction = "" 
     system_prompt = f"""
 You are Asha — an Indian AI Health Coach.
 Your tone should be {tone}.
+{boost_instruction}
+
+Identity Lock:
+{memory.get("identity_lock", {}).get("current_identity")}
+Reinforce this identity in encouragement.
+
+Behavior Intelligence:
 Behavior Intelligence:
 {intelligence_layer}
 User personality type: {personality}
@@ -244,6 +298,9 @@ Behavior Patterns:
 
 Risk Forecast:
 {memory.get("risk_forecast")}
+Identity Lock:
+{memory.get("identity_lock", {}).get("current_identity")}
+Reinforce this identity subtly in tone and encouragement.
 
 STRICT RULES:
 - Never diagnose diseases
@@ -259,7 +316,15 @@ STRICT RULES:
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(chat_history)
     messages.append({"role": "user", "content": message})
+    memory["last_message_depth"] = min(10, len(message.split()) // 10)
 
+    if memory.get("burnout_momentum", 0) > 1:
+        reflection_note = "\nUser stress seems to be increasing over time."
+    else:
+        reflection_note = ""
+
+    message += reflection_note
+    memory["last_message_depth"] = min(10, len(message.split()) // 10)
     # -------------------------------------------------
     # 🍛 COOKING INTELLIGENCE ENGINE
     # -------------------------------------------------

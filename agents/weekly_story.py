@@ -69,7 +69,6 @@ Make it intelligent, not generic.
     memory["weekly_story"] = story
     memory["weekly_report_date"] = datetime.now().isoformat()
     save_memory(memory)
-    
 
 # --------------------------------------------------
 # DISPLAY STORY

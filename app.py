@@ -171,6 +171,45 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 with tab_brain:
 
+    suppression = memory.get("suppression_state", "none")
+
+    if suppression == "high":
+        st.warning("🧠 Recovery Mode Active — Focus on rest today.")
+    elif suppression == "moderate":
+        st.info("⚖ Reduced Intensity Mode — Light day recommended.")
+
+    # ===== LIFE OS COLOR STATE =====
+    mode = memory.get("life_os_mode", "wellness")
+    burnout = memory.get("burnout_risk_level", 0)
+
+    color = "#16a34a"  # green default
+
+    if burnout >= 7:
+        color = "#dc2626"  # red
+    elif burnout >= 4:
+        color = "#f59e0b"  # orange
+    elif mode == "performance":
+        color = "#2563eb"
+    elif mode == "discipline":
+        color = "#7c3aed"
+    elif mode == "resilience":
+        color = "#0ea5e9"
+
+    st.markdown(
+        f"""
+        <div style="
+            padding:20px;
+            border-radius:15px;
+            background:{color};
+            color:white;
+            margin-bottom:20px;">
+            <h2>🧠 LIFE OS ACTIVE</h2>
+            <p>Mode: {mode.upper()}</p>
+            <p>Burnout Risk: {burnout}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     # ================= CLEAN STRUCTURED ONBOARDING =================
 
     if not memory.get("onboarding_complete"):
@@ -300,8 +339,16 @@ with tab_brain:
         unsafe_allow_html=True,
     )
 
+    if memory.get("burnout_risk_level", 0) >= 7:
+        st.error("🚨 Neural Burnout Engine Warning: Immediate recovery needed.")
+    elif memory.get("burnout_risk_level", 0) >= 4:
+        st.warning("⚠ Neural Burnout Rising. Adjust workload.")
+
+
     st.subheader("🏷 Your Health Identity")
     st.subheader("🧠 Life OS Mode")
+    brain = memory.get("brain_state", {})
+    mode = brain.get("mode", "performance_mode")
     st.info(memory.get("life_os_mode", "wellness").upper())
     st.success(memory.get("health_identity", "Not Classified Yet"))
 
@@ -314,7 +361,6 @@ with tab_brain:
         st.success("Number saved!")
 
     st.divider()
-
     st.subheader("Today's Overview")
 
     c1, c2, c3, c4, c5 = st.columns(5)
@@ -322,11 +368,17 @@ with tab_brain:
     c1.metric("🧠 Health Score", memory.get("health_score", 50))
     from core.subscription import has_premium_access
 
-    if has_premium_access("mental_engine"):
+    if has_premium_access("mental_engine")and suppression != "high":
         st.metric("🧠 Mental Score", memory.get("mental_score", 50))
     c2.metric("💧 Water", memory.get("water_intake", 0))
     c3.metric("⚡ Energy", memory.get("energy_level", 5))
     c4.metric("😴 Sleep", memory.get("sleep_hours", 0))
+
+    identity = memory.get("identity_lock", {}).get("current_identity")
+
+    if identity:
+        st.subheader("🧠 Your Evolving Identity")
+        st.success(identity)
 
     memory.setdefault("daily_food_log", [])
     food_calories_today = sum(
@@ -351,17 +403,9 @@ with tab_brain:
         elif burnout >= 4:
             st.warning("⚠ Moderate Burnout Signals. Reduce workload and increase recovery.")
 
-    if memory.get("burnout_risk_level", 0) >= 7:
-        st.error("⚠️ High Burnout Risk Detected. Consider rest and stress reset.")
-    elif memory.get("burnout_risk_level", 0) >= 4:
-        st.warning("⚡ Moderate Burnout Signals Detected.")
-
     if memory.get("risk_forecast"):
         prob = memory["risk_forecast"].get("burnout_probability", 0)
         st.info(f"🧠 Burnout Prediction Risk: {int(prob*100)}%")   
-
-        brain = memory.get("brain_state", {})
-        mode = brain.get("mode", "performance_mode")
 
         st.subheader("🧠 AI Brain Status")
         st.info(f"Mode: {mode}")
@@ -514,7 +558,8 @@ with tab_brain:
         update_streak(memory)
         add_xp(memory)
         daily_neural_sync(memory)
-
+        from agents.habit_reinforcement_engine import neural_habit_engine
+        neural_habit_engine(memory)
         st.success("Check-in saved!")
 
         memory["xp"] = memory.get("xp", 0) + 10

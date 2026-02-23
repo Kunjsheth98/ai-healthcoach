@@ -3,7 +3,7 @@ import streamlit as st
 # AI NUTRITIONIST BRAIN
 # Weekly Indian Diet Intelligence
 # =====================================================
-
+from core.config import client
 
 def nutritionist_brain(memory):
 
@@ -117,4 +117,39 @@ Increase protein and hydration.
     if not insights:
         insights.append("✅ Your eating pattern looks balanced this week. Keep going!")
 
-    memory["nutrition_insights"] = insights
+
+    brain = memory.get("brain_state", {})
+    mode = brain.get("mode", "wellness")
+
+    suppression = memory.get("suppression_state", "none")
+
+    if suppression == "high":
+        insights.append("Focus only on light digestion and hydration this week.")
+
+    system_prompt = f"""
+    You are Asha — an Indian AI Nutritionist.
+
+    Brain Mode: {mode}
+    Detected Weekly Insights: {insights}
+    Identity: {memory.get("identity_lock", {}).get("current_identity")}
+Reinforce identity subtly.
+    Refine this into:
+    - What to improve
+    - What to maintain
+    - One simple action
+
+    Keep short.
+    Do not diagnose.
+    """
+    if len(insights) <= 1:
+        memory["nutrition_insights"] = insights
+        return
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role":"system","content":system_prompt }]
+        
+    )
+
+    refined = response.choices[0].message.content
+
+    memory["nutrition_insights"] = [refined]

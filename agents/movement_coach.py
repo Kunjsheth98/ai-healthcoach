@@ -7,7 +7,17 @@ from core.config import client
 
 
 def choose_movement_type(memory):
+    brain = memory.get("brain_state", {})
+    intervention = brain.get("intervention")
 
+    suppression = memory.get("suppression_state", "none")
+
+    if suppression == "high":
+        return "recovery"
+
+    if intervention == "force_recovery":
+        return "recovery"
+    
     energy = memory["energy_level"]
     sleep = memory["sleep_hours"]
     exercised = memory["exercise_done"]
@@ -37,65 +47,61 @@ def movement_coach_agent(memory):
 
     mode = memory.get("life_os_mode", "wellness")
 
-    if mode == "performance":
-        st.subheader("🧘 Exercise & Yoga Coach")
-        st.success("🔥 High Performance Workout Mode Activated.")
-        # continue normal logic
+    brain = memory.get("brain_state", {})
+    intervention = brain.get("intervention", "normal")
 
-    elif mode == "discipline":
-        st.subheader("🧘 Exercise & Yoga Coach")
-        st.success("💪 Structured Discipline Training Activated.")
-        # continue normal logic
+    # Header always shown
+    st.subheader("🧘 Exercise & Yoga Coach")
 
-    elif mode == "resilience":
-        st.subheader("🧘 Exercise & Yoga Coach")
-        st.info("🧘 Emotional Resilience Session Recommended.")
-        st.success("Light yoga + breathing session.")
-        return
-
-    elif mode == "wellness":
-        st.subheader("🧘 Exercise & Yoga Coach")
-        st.info("🌿 Wellness Recovery Session.")
-        st.success("Gentle stretching and mobility today.")
-        return
-
-    # ================= CENTRAL BRAIN OVERRIDE =================
-    brain_mode = memory.get("brain_state", {}).get("mode")
-
-    if brain_mode == "recovery_lock":
-        st.subheader("🧘 Exercise & Yoga Coach")
+    if intervention == "force_recovery":
         st.warning("⚠ Recovery Mode Activated by AI Brain")
-        st.success("Today focus on deep breathing, light stretching and 20 min slow walk.")
-        return
-
-    if brain_mode == "load_reduction":
-        st.subheader("🧘 Exercise & Yoga Coach")
+    elif intervention == "intensity_reduction":
         st.info("⚠ Reduced Intensity Mode Activated")
-        st.success("Do 15 min light yoga or mobility. Avoid heavy workouts today.")
-        return
+    elif mode == "performance":
+        st.success("🔥 High Performance Mode")
+    elif mode == "discipline":
+        st.success("💪 Structured Discipline Mode")
+    elif mode == "resilience":
+        st.info("🧘 Emotional Resilience Focus")
+    elif mode == "wellness":
+        st.info("🌿 Balanced Wellness Mode")
     
     movement_type = choose_movement_type(memory)
-
     prompts = {
         "recovery": "Create a gentle recovery routine with breathing and stretching.",
         "yoga": "Create a beginner-friendly Indian yoga session (15 minutes).",
         "light_workout": "Create a simple home workout without equipment (20 minutes).",
         "strength": "Create a strength-focused bodyweight workout.",
         "stretching": "Create a relaxing stretching routine for recovery.",
-    }
 
+    }
+    if movement_type == "recovery":
+        st.success("Gentle stretching + breathing 15 mins.")
+        return
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {
                 "role": "system",
                 "content": f"""
-You are an Indian fitness and yoga coach.
+You are an Indian AI Movement Coach.
+
+Life Mode: {mode}
+Brain Intervention: {intervention}
+Burnout Risk: {memory.get('burnout_risk_level',0)}
 
 User stats:
 Health score: {memory['health_score']}
 Energy level: {memory['energy_level']}
 Sleep hours: {memory['sleep_hours']}
+
+Movement Type: {movement_type}
+
+If Brain Intervention = force_recovery:
+Keep routine very light and calming.
+
+If Brain Intervention = intensity_reduction:
+Reduce normal intensity by 30%.
 
 {prompts[movement_type]}
 
@@ -105,7 +111,7 @@ Provide:
 - duration
 - safety advice
 
-Keep it beginner friendly and realistic.
+Keep beginner friendly and realistic.
 """,
             }
         ],

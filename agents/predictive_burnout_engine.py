@@ -2,127 +2,80 @@ from statistics import mean
 
 def predictive_burnout_core(memory):
 
+    # ==============================
+    # 1️⃣ SMOOTHED STRESS
+    # ==============================
+
     mental_history = memory.get("mental_history", [])
-    daily_log = memory.get("daily_health_log", [])
+    recent = mental_history[-3:]
 
-    if len(mental_history) < 4:
-        return
+    if recent:
+        stress = mean([m.get("stress_index", 5) for m in recent])
+    else:
+        stress = memory.get("stress_index", 5)
 
-    # ===============================
-    # 1️⃣ Stress Acceleration
-    # ===============================
-    stress_values = [m.get("stress_index", 5) for m in mental_history[-6:]]
-    stress_acceleration = (stress_values[-1] - stress_values[-3]) if len(stress_values) >= 3 else 0
+    memory["smoothed_stress"] = round(stress, 2)
 
-    # ===============================
-    # 2️⃣ Sleep Recovery Deficit
-    # ===============================
-    sleep_values = [d.get("sleep", 7) for d in daily_log[-6:]]
-    avg_sleep = mean(sleep_values) if sleep_values else 7
-    sleep_deficit = max(0, 7 - avg_sleep)
+    # ==============================
+    # 2️⃣ CORE FACTORS
+    # ==============================
 
-    sleep_trend = sleep_values[-1] - sleep_values[-3] if len(sleep_values) >= 3 else 0
-    worsening_sleep = 1 if sleep_trend < 0 else 0
+    sleep = memory.get("sleep_hours", 7)
+    energy = memory.get("energy_level", 5)
+    mood = memory.get("daily_mood", 5)
+    workload = memory.get("lifestyle", {}).get("discipline_score", 5)
 
-    # ===============================
-    # 3️⃣ Emotional Instability
-    # ===============================
-    mood_values = [m.get("motivation_level", 5) for m in mental_history[-6:]]
-    mood_volatility = max(mood_values) - min(mood_values) if mood_values else 0
-    instability_amplifier = mood_volatility * 1.5
+    sleep_factor = max(0, (7 - sleep) * 1.2)
+    stress_factor = stress * 1.5
+    energy_factor = max(0, (5 - energy) * 1.3)
+    mood_factor = max(0, (5 - mood) * 1.2)
+    workload_factor = workload * 0.8
 
-    memory["mood_volatility"] = mood_volatility
-
-    # ===============================
-    # 4️⃣ Burnout Momentum
-    # ===============================
-    burnout_values = [m.get("burnout_risk_level", 0) for m in mental_history[-4:]]
-    burnout_momentum = burnout_values[-1] - burnout_values[0]
-    memory["burnout_velocity"] = burnout_momentum
-
-    # ===============================
-    # 5️⃣ Engagement Stability
-    # ===============================
-    engagement = memory.get("engagement_score", 0)
-    engagement_penalty = 2 if engagement < 2 else 0
-
-    # ===============================
-    # 6️⃣ Recovery Capacity Score
-    # ===============================
-    resilience = memory.get("resilience_score", 50)
-    recovery_buffer = resilience / 25  # higher resilience reduces risk
-
-    # ===============================
-    # 7️⃣ Neural Composite Risk
-    # ===============================
-    neural_score = (
-        stress_acceleration * 2
-        + sleep_deficit * 2
-        + worsening_sleep * 2
-        + instability_amplifier
-        + burnout_momentum * 2
-        + engagement_penalty
-        - recovery_buffer
+    risk_score = (
+        sleep_factor +
+        stress_factor +
+        energy_factor +
+        mood_factor +
+        workload_factor
     )
 
-    probability = min(max(neural_score / 25, 0), 1)
+    burnout_level = min(int(risk_score / 3), 10)
+    memory["burnout_risk_level"] = burnout_level
 
-    # ===============================
-    # Dynamic Forecast Window
-    # ===============================
-    if probability > 0.75:
-        forecast_days = 2
-    elif probability > 0.6:
-        forecast_days = 3
-    elif probability > 0.4:
-        forecast_days = 5
+    # ==============================
+    # 3️⃣ BURNOUT MOMENTUM (4-day slope)
+    # ==============================
+
+    if len(mental_history) >= 4:
+        recent = mental_history[-4:]
+        stress_values = [m.get("stress_index", 5) for m in recent]
+
+        momentum = (
+            (stress_values[-1] - stress_values[-2]) +
+            (stress_values[-2] - stress_values[-3])
+        ) / 2
     else:
-        forecast_days = 7
+        momentum = 0
 
-    # ===============================
-    # Trigger Classification
-    # ===============================
-    triggers = {
-        "Stress Escalation": stress_acceleration,
-        "Sleep Deficit Pattern": sleep_deficit,
-        "Emotional Instability": mood_volatility,
-        "Burnout Momentum": burnout_momentum,
-    }
+    memory["burnout_momentum"] = momentum
 
-    primary_trigger = max(triggers.items(), key=lambda x: x[1])[0]
+    # ==============================
+    # 4️⃣ PROBABILITY MODEL
+    # ==============================
 
-    # ===============================
-    # Intervention Tier
-    # ===============================
-    if probability > 0.75:
-        intervention = "Immediate Recovery Protocol"
-    elif probability > 0.6:
-        intervention = "Moderate Load Reduction"
-    elif probability > 0.4:
-        intervention = "Preventive Recovery Adjustment"
-    else:
-        intervention = "Stable"
+    probability = min(
+        1,
+        (burnout_level * 0.1) + (momentum * 0.05)
+    )
 
     memory["risk_forecast"] = {
-        "burnout_probability": probability,
-        "forecast_days": forecast_days,
-        "primary_trigger": primary_trigger,
-        "intervention_level": intervention,
+        "burnout_probability": round(probability, 2),
+        "primary_trigger": "Stress acceleration" if momentum > 1 else "Stable",
+        "severity": (
+            "Critical" if burnout_level >= 8
+            else "Elevated" if burnout_level >= 5
+            else "Normal"
+        )
     }
 
-    # ===============================
-    # Central Brain Mode Override
-    # ===============================
-    if probability > 0.75:
-        brain_mode = "recovery_lock"
-    elif probability > 0.6:
-        brain_mode = "load_reduction"
-    elif probability > 0.4:
-        brain_mode = "preventive_care"
-    else:
-        brain_mode = "performance_mode"
-
-    memory["brain_state"] = {
-        "mode": brain_mode,
-        "burnout_probability": probability
-    }
+    return burnout_level
