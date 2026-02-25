@@ -80,8 +80,20 @@ def login_user(username, password):
     if username not in users:
         return False
 
-    # Simple SHA check (no salt)
-    if users[username] == hash_password(password):
-        return True
+    stored = users[username]
 
-    return False
+    try:
+        salt_hex, stored_hash = stored.split(":")
+        salt = bytes.fromhex(salt_hex)
+
+        new_hash = hashlib.pbkdf2_hmac(
+            'sha256',
+            password.encode(),
+            salt,
+            100000
+        ).hex()
+
+        return new_hash == stored_hash
+
+    except Exception:
+        return False
