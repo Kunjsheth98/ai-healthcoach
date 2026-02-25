@@ -14,6 +14,8 @@ from core.subscription import has_premium_access, premium_lock
 
 # ================= COST =================
 from core.budget_guard import check_budget, register_ai_call, allow_request
+
+from core.companion_layer import companion_message
 # ================= AGENTS =================
 from agents.health_score import calculate_health_score
 from agents.gamification import update_streak, add_xp, gamification_ui
@@ -160,18 +162,41 @@ if st.session_state.user in ADMIN_USERS:
 
 all_tabs = st.tabs(tabs)
 
-tab_brain, tab_sync, tab_coach, tab_planner, tab_trends, tab_vault = all_tabs[:6]
+tab_brain = all_tabs[0]
+tab_sync = all_tabs[1]
+tab_coach = all_tabs[2]
+tab_planner = all_tabs[3]
+tab_trends = all_tabs[4]
+tab_vault = all_tabs[5]
 
 if st.session_state.user in ADMIN_USERS:
-    tab_admin = all_tabs[5]
+    tab_admin = all_tabs[6]
 
 # =====================================================
 # DASHBOARD
 # =====================================================
 with tab_brain:
+    st.header("🏠 Today")
+    # ---- Companion Greeting ----
+    companion_msg = companion_message(memory)
+    st.info(companion_msg)
+    # ---- Intent Selection (First Time Only) ----
+    if "primary_intent" not in memory:
 
+        st.subheader("What do you want to focus on today?")
+
+        col1, col2, col3 = st.columns(3)
+
+        if col1.button("😴 Fix Sleep"):
+            memory["primary_intent"] = "sleep"
+
+        if col2.button("🧘 Reduce Stress"):
+            memory["primary_intent"] = "stress"
+
+        if col3.button("🏋️ Start Movement"):
+            memory["primary_intent"] = "movement"
+            
     suppression = memory.get("suppression_state", "none")
-
     if suppression == "high":
         st.warning("🧠 Recovery Mode Active — Focus on rest today.")
     elif suppression == "moderate":
