@@ -2,7 +2,8 @@ import json
 import os
 import hashlib
 
-USERS_FILE = "users/users.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+USERS_FILE = os.path.join(BASE_DIR, "users", "users.json")
 
 
 # -------------------------------------
@@ -11,8 +12,8 @@ USERS_FILE = "users/users.json"
 
 
 def init_user_db():
-    if not os.path.exists("users"):
-        os.makedirs("users")
+    if not os.path.exists(os.path.join(BASE_DIR, "users")):
+        os.makedirs(os.path.join(BASE_DIR, "users"))
 
     if not os.path.exists(USERS_FILE):
         with open(USERS_FILE, "w") as f:
