@@ -86,7 +86,7 @@ if st.session_state.user is None:
                 st.session_state.plan = "free"
                 st.rerun()
             else:
-                st.error("Invalid credentials")
+                st.error("Invalid username or password")
 
     with tab2:
         new_user = st.text_input("New Username")
