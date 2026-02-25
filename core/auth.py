@@ -74,27 +74,14 @@ def login_user(username, password):
 
     init_user_db()
 
-    try:
-        with open(USERS_FILE, "r") as f:
-            users = json.load(f)
-    except Exception:
-        users = {}
+    with open(USERS_FILE, "r") as f:
+        users = json.load(f)
 
     if username not in users:
         return False
 
-    stored = users[username]
-    salt_hex, hash_hex = stored.split(":")
-
-    salt = bytes.fromhex(salt_hex)
-    new_hash = hashlib.pbkdf2_hmac(
-        'sha256',
-        password.encode(),
-        salt,
-        100000
-    ).hex()
-
-    if new_hash == hash_hex:
+    # Simple SHA check (no salt)
+    if users[username] == hash_password(password):
         return True
 
     return False
