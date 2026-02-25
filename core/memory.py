@@ -74,9 +74,24 @@ DEFAULT_MEMORY = {
     "master_decision_log": [],
     # LONG TERM LEARNING ENGINE
     "long_term_summary": "",
+    # 🧠 SELF IMPROVING CORE
+    "response_scores": [],
+    "prompt_performance": {},
+    "active_prompt_style": "balanced",
     "last_learning_update": "",
     "life_os_mode": "auto",
     "user_preferred_mode": "wellness",
+    "brain_state": {
+    "mode": "wellness",
+    "intervention": "normal"
+    },
+    "burnout_momentum": 0,
+    "suppression_state": "none",
+    "weight_history": [],
+    "daily_health_log": [],
+    "daily_food_log": [],
+    "engagement_score": 0,
+    "risk_forecast": {},
 }
 
 
@@ -94,16 +109,36 @@ def load_memory():
     if os.path.exists(memory_file):
         with open(memory_file, "r") as f:
             memory = json.load(f)
+    else:
+        memory = DEFAULT_MEMORY.copy()       
 
-        # Auto add new keys
-        for key, value in DEFAULT_MEMORY.items():
-            if key not in memory:
-                memory[key] = value
+    # ================= MEMORY CORRUPTION GUARD =================
 
-        return memory
+    for key, value in DEFAULT_MEMORY.items():
+        if key not in memory:
+            memory[key] = value
 
-    return DEFAULT_MEMORY.copy()
+    # Ensure critical lists are lists
+    if not isinstance(memory.get("master_decision_log"), list):
+        memory["master_decision_log"] = []
 
+    if not isinstance(memory.get("mental_history"), list):
+        memory["mental_history"] = []
+
+    if not isinstance(memory.get("habit_log"), list):
+        memory["habit_log"] = []
+
+    if not isinstance(memory.get("risk_history"), list):
+        memory["risk_history"] = []
+
+    memory = validate_memory(memory)
+    return memory
+
+def validate_memory(memory):
+    for key, value in DEFAULT_MEMORY.items():
+        if key not in memory:
+            memory[key] = value
+    return memory
 
 def save_memory(memory):
     memory_file = get_memory_path()

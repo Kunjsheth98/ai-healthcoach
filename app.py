@@ -13,8 +13,7 @@ from core.chat_manager import list_chats, load_chat, save_chat
 from core.subscription import has_premium_access, premium_lock
 
 # ================= COST =================
-from core.cost_meter import get_cost_summary
-
+from core.budget_guard import check_budget, register_ai_call, allow_request
 # ================= AGENTS =================
 from agents.health_score import calculate_health_score
 from agents.gamification import update_streak, add_xp, gamification_ui
@@ -348,7 +347,7 @@ with tab_brain:
     st.subheader("🏷 Your Health Identity")
     st.subheader("🧠 Life OS Mode")
     brain = memory.get("brain_state", {})
-    mode = brain.get("mode", "performance_mode")
+    mode = brain.get("mode", "wellness")
     st.info(memory.get("life_os_mode", "wellness").upper())
     st.success(memory.get("health_identity", "Not Classified Yet"))
 
@@ -362,14 +361,17 @@ with tab_brain:
 
     st.divider()
     st.subheader("Today's Overview")
+    if memory.get("daily_insight"):
+        st.subheader("🧠 AI Insight")
+        st.success(memory["daily_insight"])
 
     c1, c2, c3, c4, c5 = st.columns(5)
 
     c1.metric("🧠 Health Score", memory.get("health_score", 50))
     from core.subscription import has_premium_access
 
-    if has_premium_access("mental_engine")and suppression != "high":
-        st.metric("🧠 Mental Score", memory.get("mental_score", 50))
+    if has_premium_access("mental_engine") and suppression != "high":
+        c1.metric("🧠 Mental Score", memory.get("mental_score", 50))
     c2.metric("💧 Water", memory.get("water_intake", 0))
     c3.metric("⚡ Energy", memory.get("energy_level", 5))
     c4.metric("😴 Sleep", memory.get("sleep_hours", 0))
@@ -459,9 +461,9 @@ with tab_brain:
     st.subheader("🧬 Your Health Identity")
     st.success(memory.get("health_identity", ""))
 
-    if memory.get("first_day_insights"):
+    if memory.get("pattern_insights"):
         st.subheader("🧠 What Your Health Pattern Shows")
-        for insight in memory["first_day_insights"]:
+        for insight in memory["pattern_insights"]:
             st.info(insight)
 
     if memory.get("future_projection"):
@@ -490,15 +492,11 @@ with tab_brain:
         for b in memory["behavior_alerts"]:
             st.warning(b)
 
-    requests, usd, inr = get_cost_summary(memory)
-
     st.divider()
     st.subheader("💰 AI Usage Today")
 
-    cc1, cc2, cc3 = st.columns(3)
-    cc1.metric("Requests Used", requests)
-    cc2.metric("USD Spent", f"${usd}")
-    cc3.metric("Estimated Cost", f"₹{inr}")
+    cost = memory.get("budget", {}).get("daily_cost", 0)
+    st.metric("USD Spent Today", round(cost, 3))
 
     st.divider()
     st.subheader("📸 Upload Food Image")
@@ -548,25 +546,18 @@ with tab_brain:
         if current_weight:
             memory.setdefault("weight_history", [])
             memory["weight_history"].append({"weight": current_weight})
-
+            memory["weight_history"] = memory["weight_history"][-30:]
             memory.setdefault("daily_health_log", [])
             memory["daily_health_log"].append(
              {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
             )
 
         calculate_health_score(memory)
-        update_streak(memory)
-        add_xp(memory)
         daily_neural_sync(memory)
         from agents.habit_reinforcement_engine import neural_habit_engine
         neural_habit_engine(memory)
         st.success("Check-in saved!")
 
-        memory["xp"] = memory.get("xp", 0) + 10
-        if memory["xp"] >= 100:
-            st.balloons()
-            st.success("🏆 Level Up! You are evolving into a disciplined version of yourself.")
-            memory["xp"] = 0
 
     emotional_reward_engine(memory)
 
@@ -603,7 +594,24 @@ with tab_coach:
 
     # Show chat history
     for m in messages:
-        st.chat_message(m.get("role", "assistant")).write(m.get("content", ""))
+        with st.chat_message(m.get("role", "assistant")):
+            st.write(m.get("content", ""))
+            if m.get("role") == "assistant":
+                st.caption(f"AI Confidence: {memory.get('last_ai_confidence', 80)} %")
+            if memory.get("behavior_drift"):
+                 st.caption("⚠️ Behavior drift detected")  
+            if memory.get("future_projection_state"):
+                st.caption(f"🔮 Forecast: {memory.get('future_projection_state')}")     
+            if memory.get("evolution_stage"):
+                st.caption(f"🧬 Evolution Stage: {memory.get('evolution_stage')}")
+            if memory.get("active_prompt_style"):
+                st.caption(f"🧠 Adaptive Style: {memory.get('active_prompt_style')}") 
+            if memory.get("meta_strategy"):
+                st.caption(f"🧠 Meta Strategy: {memory.get('meta_strategy')}")      
+            if memory.get("reflex_alert"):
+                st.caption("⚡ Reflex Mode Activated")    
+            if memory.get("variable_reward") == "bonus_encouragement":
+                st.caption("🎉 Bonus Momentum Reward Unlocked")         
 
     # Chat input ALWAYS renders
     uploaded_image = st.file_uploader("Upload image (optional)", key="chat_img")

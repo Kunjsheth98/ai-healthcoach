@@ -31,8 +31,11 @@ def load_user_memory(user):
     if not os.path.exists(path):
         return None
 
-    with open(path, "r") as f:
-        return json.load(f)
+    try:
+        with open(path, "r") as f:
+            return json.load(f)
+    except Exception:
+        return None
 
 
 # --------------------------------------------------
@@ -76,6 +79,8 @@ def admin_dashboard():
     st.subheader("🧠 Master Brain Decisions")
 
     logs = memory.get("master_decision_log", [])
+    if not isinstance(logs, list):
+        logs = []
 
     if logs:
         for log in reversed(logs[-10:]):
@@ -87,6 +92,8 @@ def admin_dashboard():
     st.subheader("🤖 Autonomous Coach Messages")
 
     coach_logs = memory.get("auto_coach_log", [])
+    if not isinstance(coach_logs, list):
+        coach_logs = []
 
     if coach_logs:
         for msg in reversed(coach_logs[-10:]):
@@ -98,6 +105,8 @@ def admin_dashboard():
     st.subheader("⚠️ Risk Predictions")
 
     risks = memory.get("risk_history", [])
+    if not isinstance(risks, list):
+        risks = []
 
     if risks:
         for r in reversed(risks[-10:]):

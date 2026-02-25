@@ -8,17 +8,20 @@ import streamlit as st
 
 def has_premium_access(feature_name):
 
-    # In beta mode everything unlocked
+    # Beta mode → everything unlocked
     if APP_MODE == "beta":
         return True
 
-    # future paid logic here
     user_plan = st.session_state.get("plan", "free")
 
+    # Premium users get everything
     if user_plan == "premium":
         return True
 
-    return not PREMIUM_FEATURES.get(feature_name, False)
+    # Free users: only access if feature is NOT marked premium
+    is_premium_feature = PREMIUM_FEATURES.get(feature_name, False)
+
+    return not is_premium_feature
 
 
 # ------------------------------------------

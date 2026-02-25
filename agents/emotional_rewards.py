@@ -34,13 +34,20 @@ def emotional_reward_engine(memory):
     # -----------------------------------
     # EXERCISE CONSISTENCY
     # -----------------------------------
-    if today.get("exercise"):
-        rewards.append("🏃 Great job showing up today — consistency beats perfection!")
+    exercise_days_last3 = sum(
+        1 for d in logs[-3:] if d.get("exercise")
+    )
+
+    if exercise_days_last3 >= 2:
+        rewards.append("🏃 Exercise consistency building — keep pushing!")
 
     # -----------------------------------
     # HYDRATION SUCCESS
     # -----------------------------------
-    if today.get("water", 0) >= 6:
+    weight = memory.get("profile", {}).get("weight_kg", 60)
+    hydration_target = max(6, int(weight / 10))
+
+    if today.get("water", 0) >= hydration_target:
         rewards.append("💧 Hydration goal achieved today. Your body thanks you!")
 
     # -----------------------------------
@@ -51,4 +58,12 @@ def emotional_reward_engine(memory):
     if streak in [3, 5, 7, 10, 14, 21, 30]:
         rewards.append(f"🔥 {streak}-day streak! You're building a real health habit.")
 
-    memory["emotional_rewards"] = rewards
+    # Prevent duplicate rewards for same day
+    last_reward_date = memory.get("last_reward_date")
+
+    from datetime import date
+    today_date = str(date.today())
+
+    if last_reward_date != today_date:
+        memory["emotional_rewards"] = rewards
+        memory["last_reward_date"] = today_date

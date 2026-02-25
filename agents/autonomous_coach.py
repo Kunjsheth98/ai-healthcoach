@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from core.config import client
 from core.memory import save_memory
 from agents.whatsapp_sender import send_whatsapp_message
+from core.ai_wrapper import call_ai
 
 # --------------------------------------------------
 # SHOULD RUN AUTO COACH?
@@ -29,12 +30,10 @@ def should_run_auto_coach(memory):
 
 def generate_autonomous_message(memory):
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
+    messages=[
+        {
+            "role": "system",
+            "content": f"""
 You are the central AI Health Operating System.
 
 Brain Mode: {memory.get("brain_state", {}).get("mode", "wellness")}
@@ -66,12 +65,14 @@ Give ONE short message.
 Under 2 sentences.
 Actionable.
 Emotionally intelligent.
-""",
-            }
-        ],
-    )
+"""
+        }
+    ]
 
-    return response.choices[0].message.content
+
+    reply = call_ai(memory, messages)
+    if not reply:
+        reply = "Focus on hydration, sleep and light activity today."
 
 
 # --------------------------------------------------

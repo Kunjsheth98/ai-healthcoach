@@ -1,15 +1,16 @@
+import os
+
 # =====================================
 # WHATSAPP SETTINGS
 # =====================================
 
-# TURN OFF while testing UI only
-WHATSAPP_ENABLED = False
+WHATSAPP_ENABLED = os.getenv("WHATSAPP_ENABLED", "False") == "True"
 
-# Turn TRUE after Twilio setup
-# WHATSAPP_ENABLED = True
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_WHATSAPP_NUMBER = os.getenv(
+    "TWILIO_WHATSAPP_NUMBER",
+    "whatsapp:+14155238886"
 
 
-# Twilio Credentials (add later)
-TWILIO_ACCOUNT_SID = ""
-TWILIO_AUTH_TOKEN = ""
-TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"  # Twilio sandbox
+)

@@ -4,30 +4,12 @@ import streamlit as st
 # Weekly Indian Diet Intelligence
 # =====================================================
 from core.config import client
+from core.memory import save_memory
+from core.ai_wrapper import call_ai
 
 def nutritionist_brain(memory):
 
     mode = memory.get("life_os_mode", "wellness")
-
-    if mode == "performance":
-        st.subheader("🥗 AI Nutritionist")
-        st.success("🔥 Performance Nutrition Mode: Higher protein + structured meals.")
-        return
-
-    elif mode == "discipline":
-        st.subheader("🥗 AI Nutritionist")
-        st.success("📊 Strict calorie control + macro tracking.")
-        return
-
-    elif mode == "resilience":
-        st.subheader("🥗 AI Nutritionist")
-        st.success("🧠 Stress support nutrition: hydration + balanced carbs.")
-        return
-
-    elif mode == "wellness":
-        st.subheader("🥗 AI Nutritionist")
-        st.success("🌿 Balanced and sustainable eating.")
-        return
 
      # ================= CENTRAL BRAIN OVERRIDE =================
     brain_mode = memory.get("brain_state", {}).get("mode")
@@ -119,20 +101,20 @@ Increase protein and hydration.
 
 
     brain = memory.get("brain_state", {})
-    mode = brain.get("mode", "wellness")
-
+    brain_mode = brain.get("mode", "wellness")
     suppression = memory.get("suppression_state", "none")
 
     if suppression == "high":
-        insights.append("Focus only on light digestion and hydration this week.")
+        insights.append("Focus on light digestion and hydration this week.")
 
     system_prompt = f"""
     You are Asha — an Indian AI Nutritionist.
 
-    Brain Mode: {mode}
+    Brain Mode: {brain_mode}
     Detected Weekly Insights: {insights}
     Identity: {memory.get("identity_lock", {}).get("current_identity")}
-Reinforce identity subtly.
+    Reinforce identity subtly.
+
     Refine this into:
     - What to improve
     - What to maintain
@@ -141,15 +123,14 @@ Reinforce identity subtly.
     Keep short.
     Do not diagnose.
     """
+
     if len(insights) <= 1:
         memory["nutrition_insights"] = insights
-        return
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role":"system","content":system_prompt }]
+    else:
         
-    )
+        messages=[{"role": "system", "content": system_prompt}],
+        refined = call_ai(memory, messages)
+        if refined:
+            memory["nutrition_insights"] = [refined]
 
-    refined = response.choices[0].message.content
-
-    memory["nutrition_insights"] = [refined]
+    save_memory(memory)

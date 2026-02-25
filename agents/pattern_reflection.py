@@ -1,5 +1,10 @@
+from datetime import datetime
 def generate_pattern_reflection(memory):
 
+    today = datetime.now().date().isoformat()
+
+    if memory.get("last_pattern_update") == today:
+        return
     sleep = memory.get("sleep_hours", 6)
     water = memory.get("water_intake", 4)
     energy = memory.get("energy_level", 5)
@@ -18,4 +23,5 @@ def generate_pattern_reflection(memory):
     if not insights:
         insights.append("Your patterns show stable energy behavior.")
 
-    memory["first_day_insights"] = insights
+    memory["pattern_insights"] = insights
+    memory["last_pattern_update"] = today

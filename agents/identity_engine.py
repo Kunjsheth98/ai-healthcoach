@@ -12,28 +12,28 @@ import streamlit as st
 
 def compute_identity(memory):
 
-    streak = memory.get("current_streak", 0)
+    streak = memory.get("streak_days", 0)
     health_score = memory.get("health_score", 50)
     exercise = memory.get("exercise_done", False)
 
     identity = "Explorer"
     message = "You have started your health journey."
 
-    if streak >= 3:
-        identity = "Consistency Builder"
-        message = "You are building consistency — small wins daily."
-
-    if streak >= 7:
-        identity = "Discipline Creator"
-        message = "Your routine is becoming a real lifestyle."
-
-    if streak >= 14:
-        identity = "Health Performer"
-        message = "You are actively managing your health."
-
     if streak >= 30:
         identity = "Elite Self-Manager"
         message = "Health is now part of who you are."
+
+    elif streak >= 14:
+        identity = "Health Performer"
+        message = "You are actively managing your health."
+
+    elif streak >= 7:
+        identity = "Discipline Creator"
+        message = "Your routine is becoming a real lifestyle."
+
+    elif streak >= 3:
+        identity = "Consistency Builder"
+        message = "You are building consistency — small wins daily."
 
     # bonus reinforcement
     if health_score > 75 and exercise:

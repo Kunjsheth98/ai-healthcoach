@@ -8,7 +8,7 @@ import streamlit as st
 
 
 def log_daily_habits(memory):
-
+    memory.setdefault("habit_log", [])
     today = datetime.now().date().isoformat()
 
     # avoid duplicate logs
@@ -40,7 +40,7 @@ def log_daily_habits(memory):
 
 def analyze_habits(memory):
 
-    logs = memory["habit_log"]
+    logs = memory.get("habit_log", [])
 
     if len(logs) < 5:
         return "learning"
@@ -60,6 +60,9 @@ def analyze_habits(memory):
     if exercise_days < len(logs) * 0.3:
         insights.append("Exercise consistency is low.")
 
+    if not insights:
+        return ["Your habit consistency looks stable. Keep maintaining it."]
+
     return insights
 
 
@@ -70,7 +73,7 @@ def analyze_habits(memory):
 
 def update_personality(memory):
 
-    score = memory["health_score"]
+    score = memory.get("health_score", 50)
 
     if score < 40:
         memory["personality_mode"] = "supportive"

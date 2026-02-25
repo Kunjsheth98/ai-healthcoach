@@ -10,9 +10,10 @@ def detect_emotional_state(memory):
 
     score = memory["health_score"]
     energy = memory["energy_level"]
-    streak = len(memory["checkin_history"])
+    burnout = memory.get("burnout_risk_level", 0)
+    streak = memory.get("streak_days", 0)
 
-    if score < 40 or energy <= 3:
+    if score < 40 or energy <= 3 or burnout >= 7:
         state = "struggling"
 
     elif streak >= 5 and score > 65:
@@ -36,7 +37,7 @@ def detect_emotional_state(memory):
 
 
 def emotional_feedback_ui(memory):
-
+    detect_emotional_state(memory)
     state = memory.get("emotional_state", "balanced")
 
     if state == "struggling":

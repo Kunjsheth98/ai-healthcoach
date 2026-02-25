@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime, timedelta
-from core.memory import save_memory
+from core.memory import save_memory 
 from agents.whatsapp_sender import send_whatsapp_message
 
 # --------------------------------------------------
@@ -12,7 +12,7 @@ def generate_medicine_schedule(memory):
 
     if not memory.get("medicines"):
         return
-
+    memory["medicine_schedule"] = []
     schedule = []
 
     for entry in memory["medicines"]:
@@ -63,19 +63,30 @@ def medicine_reminder_agent(memory):
     if not should_check_medicine(memory):
         return
 
-    now = datetime.now().strftime("%H:%M")
-
+    now_time = datetime.now()
     reminders = []
 
     for item in memory.get("medicine_schedule", []):
-        if item["time"] == now:
+        scheduled = datetime.strptime(item["time"], "%H:%M").time()
+
+        scheduled_dt = datetime.combine(now_time.date(), scheduled)
+
+        # Allow 5 minute window
+        if abs((now_time - scheduled_dt).total_seconds()) <= 300:
             reminders.append(item["medicine"])
 
     if reminders:
 
         st.subheader("💊 Medicine Reminder")
-
+        memory.setdefault("medicine_log", [])
+        today = datetime.now().date().isoformat()
         for r in reminders:
+
+            log_key = f"{today}_{r}"
+
+            if log_key in memory["medicine_log"]:
+                continue
+
             message = f"⏰ Time to take your medicine:\n{r}"
 
             st.warning(message)
@@ -83,5 +94,6 @@ def medicine_reminder_agent(memory):
             if memory.get("phone_number"):
                 send_whatsapp_message(memory["phone_number"], message)
 
+            memory["medicine_log"].append(log_key)
     memory["last_medicine_check"] = datetime.now().isoformat()
     save_memory(memory)

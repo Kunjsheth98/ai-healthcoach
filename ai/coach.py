@@ -3,6 +3,7 @@
 # =====================================================
 
 from core.config import client
+from core.ai_wrapper import call_ai
 
 # ---------------- SAFETY GUARDRAILS ----------------
 from core.medical_guardrails import (
@@ -18,14 +19,14 @@ from core.deployment_shield import check_rate_limit, register_usage
 # ---------------- BUDGET + COST CONTROL ----------------
 from core.budget_guard import check_budget, register_ai_call, allow_request
 
-from core.cost_meter import register_cost
-
 # ---------------- INDIAN FOOD INTELLIGENCE ----------------
 from agents.food_interpreter import detect_indian_food
 from agents.cooking_intelligence import calculate_indian_meal, log_meal
 
 from agents.mental_engine import process_mental_state, post_response_learning
 from core.subscription import has_premium_access
+from core.emotional_imprint_engine import emotional_imprint_engine
+from core.dopamine_engine import dopamine_trigger
 
 from agents.behavioral_core import (
     update_behavioral_patterns,
@@ -33,6 +34,8 @@ from agents.behavioral_core import (
     evolve_personality,
 )
 from agents.predictive_burnout_engine import predictive_burnout_core
+from agents.personality_engine import evolve_personality_from_habits
+from agents.asha_memory import update_asha_memory, get_asha_personality_prompt
 # =====================================================
 # MAIN AI FUNCTION
 # =====================================================
@@ -123,7 +126,7 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     Sleep Pattern: {lifestyle.get('sleep_pattern')}
     """
     if len(weight_history) >= 2:
-        first = weight_history[0]["weight"]
+        first = weight_history[-2]["weight"]
         last = weight_history[-1]["weight"]
         diff = last - first
 
@@ -187,6 +190,16 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
 
     suppression = memory.get("suppression_state", "none")
 
+    # ⚡ REFLEX HARD BRAKE
+
+    if memory.get("reflex_alert"):
+        suppression = "high"
+        tone = "calm, grounding and stabilizing"
+
+    # 🧘 META SILENCE INTELLIGENCE
+    if memory.get("meta_strategy") == "prioritize_sleep":
+        suppression = "high"
+
     if suppression == "high":
         tone = "calm, grounding and pressure-free"
     elif suppression == "moderate":
@@ -196,27 +209,9 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     predict_risk(memory)
     evolve_personality(memory)
     predictive_burnout_core(memory)
-    from agents.personality_engine import evolve_personality_from_habits
     evolve_personality_from_habits(memory)
-
-# ---------------- CENTRAL COACH AUTHORITY ----------------
-    burnout = memory.get("burnout_risk_level", 0)
-
-    if burnout >= 7:
-        memory["brain_state"] = {
-            "mode": "recovery_lock",
-            "intervention": "force_recovery"
-        }
-    elif burnout >= 4:
-        memory["brain_state"] = {
-            "mode": memory.get("life_os_mode", "wellness"),
-            "intervention": "intensity_reduction"
-        }
-    else:
-        memory["brain_state"] = {
-            "mode": memory.get("life_os_mode", "wellness"),
-            "intervention": "normal"
-        }
+    update_asha_memory(memory)
+    asha_prompt = get_asha_personality_prompt(memory)
 
     personality = memory.get("personality_type", "Balanced Guide")
     volatility = memory.get("mood_volatility", 0)
@@ -264,19 +259,25 @@ Make the user feel deeply seen.
     system_prompt = f"""
 You are Asha — an Indian AI Health Coach.
 Your tone should be {tone}.
+{asha_prompt}
 {boost_instruction}
 
-Identity Lock:
-{memory.get("identity_lock", {}).get("current_identity")}
-Reinforce this identity in encouragement.
-
-Behavior Intelligence:
 Behavior Intelligence:
 {intelligence_layer}
 User personality type: {personality}
+Perception Layer:
+Based on historical behavior, adapt subtle tone shifts.
+Reference past tendencies when possible.
+If patterns exist, mention them confidently.
 User emotional state: {emotion}
+Mental Pattern Trend: {memory.get("mental_pattern", "stable")}
 
 Health score: {memory.get('health_score', 50)}
+
+Goal Mode: {memory.get("goal_mode", "general")}
+Evolution Stage: {memory.get("evolution_stage",1)}
+Coach Style: {memory.get("active_prompt_style", memory.get("adaptive_coach_style","supportive"))}
+Difficulty Modifier: {memory.get("difficulty_modifier",1.0)}
 
 User Profile:
 {profile_context}
@@ -296,6 +297,9 @@ Mood Trend: {memory.get('mood_trend', 'stable')}
 Behavior Patterns:
 {memory.get("behavior_patterns")}
 
+Historical Signals:
+{memory.get("pattern_memory")[-3:] if memory.get("pattern_memory") else "No strong pattern yet"}
+
 Risk Forecast:
 {memory.get("risk_forecast")}
 Identity Lock:
@@ -307,23 +311,34 @@ STRICT RULES:
 - Never prescribe medicines
 - Never change dosage
 - Only lifestyle & wellness coaching
+
+After giving advice, explain briefly why this suggestion was made based on user patterns.
 """
 
     # -------------------------------------------------
     # BUILD MESSAGE HISTORY
     # -------------------------------------------------
-
-    messages = [{"role": "system", "content": system_prompt}]
-    messages.extend(chat_history)
-    messages.append({"role": "user", "content": message})
-    memory["last_message_depth"] = min(10, len(message.split()) // 10)
-
     if memory.get("burnout_momentum", 0) > 1:
         reflection_note = "\nUser stress seems to be increasing over time."
     else:
         reflection_note = ""
 
     message += reflection_note
+    messages = [{"role": "system", "content": system_prompt}]
+    messages.extend(chat_history)
+    messages.append({"role": "user", "content": message})
+    # ================= PERCEPTION MEMORY =================
+
+    memory.setdefault("pattern_memory", [])
+
+    if len(memory["pattern_memory"]) < 20:
+        memory["pattern_memory"].append({
+            "energy": memory.get("energy_level", 5),
+            "stress": memory.get("stress_index", 5),
+            "mood": memory.get("daily_mood", 5)
+        })
+    memory["last_message_depth"] = min(10, len(message.split()) // 10)
+
     memory["last_message_depth"] = min(10, len(message.split()) // 10)
     # -------------------------------------------------
     # 🍛 COOKING INTELLIGENCE ENGINE
@@ -338,21 +353,39 @@ STRICT RULES:
     # 🤖 OPENAI CALL
     # -------------------------------------------------
 
-    try:
-        response = client.chat.completions.create(
-    model="gpt-4o-mini", messages=messages  # type: ignore
-    )
-        reply = response.choices[0].message.content or ""
-        engagement = memory.get("engagement_score", 0)
+    reply = call_ai(memory, messages)
 
-        if engagement % 3 == 0 and engagement != 0:
-            reply += "\n\n🔥 You're building strong momentum. Keep showing up."
-    except Exception:
-        reply = (
-            "⚠️ Asha is currently in offline mode.\n\n"
+    # 🔥 Dopamine Reinforcement Layer
+    dopamine = dopamine_trigger(memory)
+    if dopamine:
+        reply = (reply or "") + "\n\n" + dopamine
+
+    # 🔥 Emotional Imprint Layer (First Interaction Only)
+    imprint = emotional_imprint_engine(memory, message)
+    if imprint:
+        reply = imprint + "\n\n" + (reply or "")
+
+    # 🚨 RELAPSE RESPONSE BOOST
+    if memory.get("relapse_risk"):
+        reply = (reply or "") + "\n\n⚠️ I sense your momentum slipping slightly. Let's protect your streak today."
+
+    # ⚡ REFLEX MICRO REINFORCEMENT
+    if memory.get("reflex_alert"):
+        reply = "Pause. Take a slow breath with me for 10 seconds.\n\n" + (reply or "")
+    if not reply:
+        reply = ("⚠️ Asha is currently in offline mode.\n\n"
             "AI responses are paused because API billing is not active.\n"
-            "Your app UI and health tracking are still working normally."
-        )
+            "Your app UI and health tracking are still working normally.")
+    engagement = memory.get("engagement_score", 0)    
+
+    if engagement % 3 == 0 and engagement != 0:
+        reply += "\n\n🔥 You're building strong momentum. Keep showing up."
+
+    # 🔥 Identity Reinforcement
+    if memory.get("imprint_identity") and engagement > 3:
+        reply += f"\n\nYou're stepping into your identity: {memory.get('imprint_identity')}."    
+        
+        
 
     # -------------------------------------------------
     # 🧠 POST RESPONSE LEARNING (OUTSIDE TRY)
@@ -360,13 +393,23 @@ STRICT RULES:
     if has_premium_access("mental_engine"):
         post_response_learning(memory, message, reply)
 
-    # -------------------------------------------------
-    # 📊 REGISTER USAGE + COST
-    # -------------------------------------------------
+    # 🧠 RESPONSE EFFECTIVENESS TRACKING
 
-    register_usage(memory)
-    register_ai_call(memory)
-    register_cost(memory)
+    memory.setdefault("response_scores", [])
+
+    engagement = memory.get("engagement_score", 0)
+
+    score = 1
+
+    if "thank" in message.lower():
+        score += 1
+
+    if memory.get("mental_pattern") == "stress_improving":
+        score += 1
+
+    memory["response_scores"].append(score)
+
+    memory["response_scores"] = memory["response_scores"][-50:]    
 
     # -------------------------------------------------
     # 🛡️ FINAL SAFETY FILTER
@@ -376,5 +419,11 @@ STRICT RULES:
 
     if any(word in reply.lower() for word in unsafe_words):
         reply += "\n\n⚠️ This is general wellness guidance, not medical advice."
-
+    # AI CONFIDENCE SCORE
+    confidence = 100 - (memory.get("burnout_risk_level", 0) *5)
+    if memory.get("mental_pattern") == "stress_increasing":
+        confidence -= 10
+    if memory.get("behavior_drift"):
+        confidence -= 5    
+    memory["last_ai_confidence"] = max(40, confidence)
     return reply

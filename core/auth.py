@@ -24,8 +24,19 @@ def init_user_db():
 # -------------------------------------
 
 
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
+def hash_password(password, salt=None):
+
+    if salt is None:
+        salt = os.urandom(16)
+
+    hashed = hashlib.pbkdf2_hmac(
+        'sha256',
+        password.encode(),
+        salt,
+        100000
+    )
+
+    return salt.hex() + ":" + hashed.hex()
 
 
 # -------------------------------------
@@ -63,13 +74,27 @@ def login_user(username, password):
 
     init_user_db()
 
-    with open(USERS_FILE, "r") as f:
-        users = json.load(f)
+    try:
+        with open(USERS_FILE, "r") as f:
+            users = json.load(f)
+    except Exception:
+        users = {}
 
     if username not in users:
         return False
 
-    if users[username] == hash_password(password):
+    stored = users[username]
+    salt_hex, hash_hex = stored.split(":")
+
+    salt = bytes.fromhex(salt_hex)
+    new_hash = hashlib.pbkdf2_hmac(
+        'sha256',
+        password.encode(),
+        salt,
+        100000
+    ).hex()
+
+    if new_hash == hash_hex:
         return True
 
     return False

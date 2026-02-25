@@ -8,6 +8,10 @@ def update_behavioral_patterns(memory):
     sleep_log = memory.get("daily_health_log", [])
 
     if len(mental_log) < 3:
+        memory["behavior_patterns"] = {
+            "stress_trend": "unknown",
+            "sleep_stability": "unknown"
+        }
         return
 
     # ---------------- Stress Trend ----------------
@@ -50,14 +54,14 @@ def predict_risk(memory):
     if patterns.get("sleep_stability") == "unstable":
         burnout_probability += 0.2
 
-    memory["risk_forecast"] = {
+    memory["behavioral_risk"] = {
         "burnout_probability": round(burnout_probability, 2)
     }
 
 
 def evolve_personality(memory):
 
-    risk = memory.get("risk_forecast", {}).get("burnout_probability", 0)
+    risk = memory.get("behavioral_risk", {}).get("burnout_probability", 0)
 
     if risk >= 0.6:
         memory["personality_type"] = "overwhelmed"
@@ -65,3 +69,13 @@ def evolve_personality(memory):
         memory["personality_type"] = "strained"
     else:
         memory["personality_type"] = "adaptive"
+
+def detect_behavior_drift(memory):
+    history = memory.get("health_score_history", [])
+
+    if len(history) < 10:
+        return
+    if history[-1] < history[-5]:
+        memory["behavior_drift"] = True
+    else:
+        memory["behavior_drift"] = False            

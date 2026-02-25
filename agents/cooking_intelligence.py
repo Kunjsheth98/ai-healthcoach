@@ -29,22 +29,31 @@ def detect_cooking_style(memory, text):
     init_cooking_profile(memory)
 
     text = text.lower()
-
+    # Reset to default before re-detecting
+    memory["cooking_profile"]["oil_factor"] = 1.0
+    memory["cooking_profile"]["style"] = "home_light"
     if any(word in text for word in ["restaurant", "hotel", "swiggy", "zomato"]):
         memory["cooking_profile"]["style"] = "restaurant"
         memory["cooking_profile"]["oil_factor"] = 1.4
         memory["cooking_profile"]["confidence"] += 1
-
+        memory["cooking_profile"]["confidence"] = min(
+            memory["cooking_profile"]["confidence"], 10
+    )
     elif any(word in text for word in ["ghee", "butter", "fried", "deep fry"]):
         memory["cooking_profile"]["style"] = "heavy_home"
         memory["cooking_profile"]["oil_factor"] = 1.25
         memory["cooking_profile"]["confidence"] += 1
+        memory["cooking_profile"]["confidence"] = min(
+            memory["cooking_profile"]["confidence"], 10
+    )
 
     elif any(word in text for word in ["boiled", "diet", "less oil", "light"]):
         memory["cooking_profile"]["style"] = "diet_home"
         memory["cooking_profile"]["oil_factor"] = 0.9
         memory["cooking_profile"]["confidence"] += 1
-
+        memory["cooking_profile"]["confidence"] = min(
+            memory["cooking_profile"]["confidence"], 10
+    )
 
 # -----------------------------------------------------
 # CALCULATE FOOD CALORIES (SMART INDIAN WAY)
@@ -70,10 +79,10 @@ def calculate_indian_meal(memory, text):
             quantity = 1
 
             for i in range(1, 6):
-                if str(i) in text:
+                if f"{i} {food}" in text:
                     quantity = i
 
-            base_calories = info["base_calories"]
+            base_calories = info.get("base_calories", info.get("calories", 0))
 
             adjusted = int(base_calories * oil_factor)
 

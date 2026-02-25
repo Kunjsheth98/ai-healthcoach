@@ -35,9 +35,11 @@ def init_usage(memory):
 
 def reset_if_new_day(memory):
 
+    init_usage(memory)
+
     today = datetime.now().date().isoformat()
 
-    if memory["usage"]["last_reset"] != today:
+    if memory["usage"].get("last_reset") != today:
         memory["usage"]["daily_count"] = 0
         memory["usage"]["last_reset"] = today
 
@@ -78,6 +80,8 @@ def check_rate_limit(memory):
 
 
 def register_usage(memory):
+
+    init_usage(memory)
 
     memory["usage"]["daily_count"] += 1
     memory["usage"]["last_message_time"] = datetime.now().isoformat()

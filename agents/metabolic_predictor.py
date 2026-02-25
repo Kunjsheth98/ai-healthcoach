@@ -28,21 +28,21 @@ def metabolic_predictor(memory):
     # FATIGUE RISK
     # -----------------------------------
 
-    if avg_sleep < 6 and avg_energy < 5:
+    if avg_sleep < 6 and avg_energy < 5 and len(recent) >= 7:
         alerts.append("😴 Fatigue risk detected. Low sleep and energy trend observed.")
 
     # -----------------------------------
     # DEHYDRATION TREND
     # -----------------------------------
 
-    if avg_water < 4:
+    if avg_water < 4 and len(recent) >= 7:
         alerts.append("💧 Hydration levels low this week. Increase water intake.")
 
     # -----------------------------------
     # ACTIVITY DECLINE
     # -----------------------------------
 
-    if exercise_days <= 1:
+    if exercise_days <= 1 and len(recent) >= 7:
         alerts.append("🏃 Activity drop detected. Body metabolism may slow.")
 
     # -----------------------------------
@@ -52,4 +52,9 @@ def metabolic_predictor(memory):
     if avg_sleep >= 7 and avg_energy >= 7:
         alerts.append("✅ Recovery trend strong. Your body is responding well.")
 
+    memory.setdefault("metabolic_history", [])
+    memory["metabolic_history"].append({
+        "alerts": alerts
+    })
+    memory["metabolic_history"] = memory["metabolic_history"][-10:]
     memory["metabolic_alerts"] = alerts

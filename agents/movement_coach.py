@@ -1,6 +1,6 @@
 import streamlit as st
 from core.config import client
-
+from core.ai_wrapper import call_ai
 # ---------------------------------------------------
 # DETERMINE WORKOUT TYPE
 # ---------------------------------------------------
@@ -76,48 +76,51 @@ def movement_coach_agent(memory):
 
     }
     if movement_type == "recovery":
-        st.success("Gentle stretching + breathing 15 mins.")
+        st.success(
+            "🧘 15–20 mins gentle mobility, slow breathing, and light walking.\n"
+            "Focus on nervous system reset today."
+        )
         return
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
-You are an Indian AI Movement Coach.
+    
+    
+    messages=[
+        {
+            "role": "system",
+            "content": f"""
+    You are an Indian AI Movement Coach.
 
-Life Mode: {mode}
-Brain Intervention: {intervention}
-Burnout Risk: {memory.get('burnout_risk_level',0)}
+    Life Mode: {mode}
+    Brain Intervention: {intervention}
+    Burnout Risk: {memory.get('burnout_risk_level',0)}
 
-User stats:
-Health score: {memory['health_score']}
-Energy level: {memory['energy_level']}
-Sleep hours: {memory['sleep_hours']}
+    User stats:
+    Health score: {memory['health_score']}
+    Energy level: {memory['energy_level']}
+    Sleep hours: {memory['sleep_hours']}
+    Consistency Score: {memory.get('consistency_score', 0)}
+    Movement Type: {movement_type}
 
-Movement Type: {movement_type}
+    If Brain Intervention = force_recovery:
+    Keep routine very light and calming.
 
-If Brain Intervention = force_recovery:
-Keep routine very light and calming.
+    If Brain Intervention = intensity_reduction:
+    Reduce normal intensity by 30%.
 
-If Brain Intervention = intensity_reduction:
-Reduce normal intensity by 30%.
+    {prompts[movement_type]}
 
-{prompts[movement_type]}
+    Provide:
+    - warmup
+    - main exercises/yoga poses
+    - duration
+    - safety advice
 
-Provide:
-- warmup
-- main exercises/yoga poses
-- duration
-- safety advice
+    Keep beginner friendly and realistic.
+    """
+                }
+            ]
 
-Keep beginner friendly and realistic.
-""",
-            }
-        ],
-    )
+    plan = call_ai(memory, messages)
+    if not plan:
+        plan = "Do 20 minutes light walking + light stretching."
 
-    plan = response.choices[0].message.content
-
-    st.subheader("🧘 Exercise & Yoga Coach")
     st.success(plan)

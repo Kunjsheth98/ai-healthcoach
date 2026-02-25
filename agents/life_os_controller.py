@@ -1,7 +1,7 @@
 def update_life_os_mode(memory):
 
     preferred = memory.get("user_preferred_mode", "wellness")
-    burnout = memory.get("risk_forecast", {}).get("burnout_probability", 0)
+    burnout = memory.get("burnout_risk_level", 0) / 10
     stress = memory.get("stress_index", 5)
 
     # Emergency override

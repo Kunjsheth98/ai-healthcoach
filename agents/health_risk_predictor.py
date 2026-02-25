@@ -29,11 +29,11 @@ def analyze_health_risks(memory):
 
     risks = []
 
-    sleep = memory["sleep_hours"]
-    energy = memory["energy_level"]
-    water = memory["water_intake"]
-    score = memory["health_score"]
-    streak = memory["streak_days"]
+    sleep = memory.get("sleep_hours", 6)
+    energy = memory.get("energy_level", 5)
+    water = memory.get("water_intake", 0)
+    score = memory.get("health_score", 50)
+    streak = memory.get("streak_days", 0)
 
     if sleep < 5:
         risks.append("😴 Sleep has been low. Fatigue or burnout risk may increase.")
@@ -72,6 +72,7 @@ def health_risk_predictor(memory):
         for r in risks:
             st.error(r)
 
+        memory.setdefault("risk_history", [])
         memory["risk_history"].extend(risks)
 
     memory["last_risk_check"] = datetime.now().isoformat()

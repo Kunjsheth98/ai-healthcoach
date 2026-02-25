@@ -1,6 +1,7 @@
 import streamlit as st
 from core.memory import save_memory
 from core.budget_guard import get_today_cost
+from core.budget_guard import init_budget
 
 # ==========================================
 # ADMIN CONTROL CENTER
@@ -8,7 +9,7 @@ from core.budget_guard import get_today_cost
 
 
 def admin_control_center(memory):
-
+    init_budget(memory)
     st.title("🛠️ Admin Control Center")
 
     # ---------------- AI STATUS ----------------
@@ -50,6 +51,11 @@ def admin_control_center(memory):
 
     if st.button("💾 Save Budget"):
         memory["admin_budget_limit"] = new_budget
+
+        # auto resume if new budget allows
+        if memory.get("budget", {}).get("daily_cost", 0) < new_budget:
+            memory["ai_paused"] = False
+
         save_memory(memory)
         st.success("Budget updated!")
 

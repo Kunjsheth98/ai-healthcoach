@@ -5,13 +5,13 @@ def health_risk_agent(memory):
 
     risks = []
 
-    if memory["health_score"] < 35:
+    if memory.get("health_score", 50) < 35:
         risks.append("Low health score")
 
-    if memory["sleep_hours"] < 5:
+    if memory.get("sleep_hours", 7) < 5:
         risks.append("Sleep deprivation risk")
 
-    if memory["water_intake"] < 3:
+    if memory.get("water_intake", 0) < 3:
         risks.append("Dehydration risk")
 
     if risks:

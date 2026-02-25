@@ -23,7 +23,8 @@ def evolve_personality_from_habits(memory):
         personality = "Balanced Guide"
 
     memory["personality_type"] = personality
-
+    
+    save_memory(memory)
 # -----------------------------------------
 # SHOW PERSONALITY UI
 # -----------------------------------------
@@ -34,10 +35,11 @@ def personality_display_ui(memory):
     personality = memory.get("personality_type", "adaptive")
 
     labels = {
-        "supportive_companion": "🤍 Supportive Companion",
-        "accountability_partner": "🧭 Accountability Partner",
-        "performance_coach": "🔥 Performance Coach",
-        "elite_trainer": "🚀 Elite Trainer",
+        "Calm Recovery Guide": "🧘 Calm Recovery Guide",
+        "High Performance Mentor": "🔥 High Performance Mentor",
+        "Structured Accountability Coach": "📊 Structured Accountability Coach",
+        "Motivational Growth Coach": "🚀 Motivational Growth Coach",
+        "Balanced Guide": "⚖ Balanced Guide",
     }
 
     st.subheader("🧬 Your AI Coach Personality")

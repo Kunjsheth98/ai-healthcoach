@@ -47,6 +47,7 @@ def add_xp(memory):
     if memory["sleep_hours"] >= 7:
         xp_gain += 5
 
+    memory.setdefault("xp_points", 0)
     memory["xp_points"] += xp_gain
 
     update_level(memory)
@@ -78,9 +79,9 @@ def gamification_ui(memory):
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("🔥 Streak", f"{memory['streak_days']} days")
-    col2.metric("⭐ XP", memory["xp_points"])
-    col3.metric("🏅 Level", memory["health_level"])
+    col1.metric("🔥 Streak", f"{memory.get('streak_days',0)} days")
+    col2.metric("⭐ XP", memory.get("xp_points",0))
+    col3.metric("🏅 Level", memory.get("health_level",1))
 
     if memory["streak_days"] >= 5:
         st.success("Amazing consistency! Keep going 🔥")

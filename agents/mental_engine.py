@@ -10,7 +10,15 @@ LOW_MOTIVATION = ["lazy", "unmotivated", "can't focus"]
 def process_mental_state(memory, message):
 
     text = message.lower()
+    # ⚡ REFLEX SPIKE DETECTOR
 
+    memory.setdefault("reflex_alert", False)
+
+    if any(word in text for word in ["hate", "done", "quit", "exhausted", "can't do this"]):
+        memory["reflex_alert"] = True
+    else:
+        memory["reflex_alert"] = False
+        
     memory.setdefault("mental_score", 50)
     memory.setdefault("stress_index", 5)
     memory.setdefault("anxiety_index", 5)
@@ -41,13 +49,14 @@ def process_mental_state(memory, message):
         calculate_mood_volatility(memory)
         calculate_sleep_mood_correlation(memory)
         
-    memory["mental_score"] = max(
-        0,
+    score = (
         100
         - (memory["stress_index"] * 5)
         - (memory["anxiety_index"] * 4)
-        + (memory["resilience_score"] * 0.3),
+        + (memory["resilience_score"] * 0.3)
     )
+
+    memory["mental_score"] = max(0, min(100, round(score)))
 
     memory["mental_history"].append(
         {
@@ -58,6 +67,20 @@ def process_mental_state(memory, message):
             "burnout_risk_level": memory.get("burnout_risk_level", 0)
         }
     )
+    # 🔥 ADVANCED MENTAL PATTERN MODEL
+    history = memory.get("mental_history", [])
+
+    if len(history) >= 5:
+        recent_stress = [h.get("stress", 5) for h in history[-5:]]
+
+        if recent_stress[-1] > recent_stress[0]:
+            memory["mental_pattern"] = "stress_increasing"
+        elif recent_stress[-1] < recent_stress[0]:
+            memory["mental_pattern"] = "stress_improving"
+        else:
+            memory["mental_pattern"] = "stable"
+
+    memory["mental_history"] = memory["mental_history"][-50:]
 
 def post_response_learning(memory, user_message, ai_reply):
 
@@ -101,6 +124,7 @@ def calculate_mood_volatility(memory):
     return volatility          
 
 def calculate_sleep_mood_correlation(memory):
+
     log = memory.get("emotional_event_log", [])
 
     if len(log) < 5:
@@ -113,9 +137,18 @@ def calculate_sleep_mood_correlation(memory):
     avg_sleep = sum(sleep_values) / len(sleep_values)
     avg_mood = sum(mood_values) / len(mood_values)
 
-    correlation = 0
-    for s, m in zip(sleep_values, mood_values):
-        correlation += (s - avg_sleep) * (m - avg_mood)
+    numerator = sum(
+        (s - avg_sleep) * (m - avg_mood)
+        for s, m in zip(sleep_values, mood_values)
+    )
+
+    sleep_var = sum((s - avg_sleep) ** 2 for s in sleep_values)
+    mood_var = sum((m - avg_mood) ** 2 for m in mood_values)
+
+    denominator = (sleep_var * mood_var) ** 0.5
+
+    correlation = numerator / denominator if denominator != 0 else 0
 
     memory["sleep_mood_correlation"] = round(correlation, 2)
+
     return correlation

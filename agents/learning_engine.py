@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 from core.config import client
 from core.memory import save_memory
+from core.ai_wrapper import call_ai
 
 # --------------------------------------------------
 # SHOULD UPDATE LEARNING MEMORY
@@ -34,39 +35,37 @@ def generate_long_term_summary(memory):
         return
 
     recent_logs = logs[-20:]  # limit tokens
+    messages=[
+        {
+            "role": "system",
+            "content": f"""
+    You are a long-term health learning AI.
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
-You are a long-term health learning AI.
+    Analyze the user's long-term behavior and create a compact
+    personal health profile summary.
 
-Analyze the user's long-term behavior and create a compact
-personal health profile summary.
+    Data:
+    {recent_logs}
 
-Data:
-{recent_logs}
+    Create a short summary describing:
+    - lifestyle pattern
+    - energy behavior
+    - hydration habits
+    - exercise consistency
+    - coaching style preference
 
-Create a short summary describing:
-- lifestyle pattern
-- energy behavior
-- hydration habits
-- exercise consistency
-- coaching style preference
+    Keep under 120 words.
+    """,
+        }
+    ]
 
-Keep under 120 words.
-""",
-            }
-        ],
-    )
-
-    summary = response.choices[0].message.content
+    summary = call_ai(memory, messages)
+    if not summary:
+        return    
 
     memory["long_term_summary"] = summary
     memory["last_learning_update"] = datetime.now().isoformat()
-
+    save_memory(memory)
 def analyze_mood_trend(memory):
 
     mood_log = memory.get("emotional_event_log", [])
@@ -83,11 +82,7 @@ def analyze_mood_trend(memory):
     else:
         mood_trend = "stable"
 
-    memory["mood_trend"] = mood_trend    
-
-    save_memory(memory)
-
-    analyze_mood_trend(memory)
+    memory["mood_trend"] = mood_trend
 
 def calculate_burnout_velocity(memory):
 

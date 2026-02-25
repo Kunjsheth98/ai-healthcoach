@@ -16,8 +16,12 @@ def health_record_vault():
 
     if uploaded:
 
-        save_health_record(uploaded)
-        st.success("Record uploaded successfully ✅")
+        memory_key = f"vault_uploaded_{uploaded.name}"
+
+        if not st.session_state.get(memory_key):
+            save_health_record(uploaded)
+            st.session_state[memory_key] = True
+            st.success("Record uploaded successfully ✅")
 
     st.divider()
 

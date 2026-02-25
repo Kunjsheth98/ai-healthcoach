@@ -10,9 +10,9 @@ def predictive_burnout_core(memory):
     recent = mental_history[-3:]
 
     if recent:
-        stress = mean([m.get("stress_index", 5) for m in recent])
+        stress = mean([m.get("stress", 5) for m in recent])
     else:
-        stress = memory.get("stress_index", 5)
+        stress = memory.get("stress", 5)
 
     memory["smoothed_stress"] = round(stress, 2)
 
@@ -23,13 +23,13 @@ def predictive_burnout_core(memory):
     sleep = memory.get("sleep_hours", 7)
     energy = memory.get("energy_level", 5)
     mood = memory.get("daily_mood", 5)
-    workload = memory.get("lifestyle", {}).get("discipline_score", 5)
+    discipline = memory.get("lifestyle", {}).get("discipline_score", 5)
 
     sleep_factor = max(0, (7 - sleep) * 1.2)
     stress_factor = stress * 1.5
     energy_factor = max(0, (5 - energy) * 1.3)
     mood_factor = max(0, (5 - mood) * 1.2)
-    workload_factor = workload * 0.8
+    workload_factor = max(0, (discipline - 5)) * 0.5
 
     risk_score = (
         sleep_factor +
@@ -48,7 +48,7 @@ def predictive_burnout_core(memory):
 
     if len(mental_history) >= 4:
         recent = mental_history[-4:]
-        stress_values = [m.get("stress_index", 5) for m in recent]
+        stress_values = [m.get("stress", 5) for m in recent]
 
         momentum = (
             (stress_values[-1] - stress_values[-2]) +
@@ -63,10 +63,8 @@ def predictive_burnout_core(memory):
     # 4️⃣ PROBABILITY MODEL
     # ==============================
 
-    probability = min(
-        1,
-        (burnout_level * 0.1) + (momentum * 0.05)
-    )
+    raw_probability = (burnout_level * 0.1) + (momentum * 0.05)
+    probability = max(0, min(1, raw_probability))
 
     memory["risk_forecast"] = {
         "burnout_probability": round(probability, 2),

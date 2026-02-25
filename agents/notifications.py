@@ -1,14 +1,16 @@
 import streamlit as st
 
-
 def notification_logic_agent(memory):
 
     messages = []
 
-    if memory["water_intake"] < 4:
+    water = memory.get("water_intake", 0)
+    score = memory.get("health_score", 50)
+
+    if water < 4:
         messages.append("Drink more water 💧")
 
-    if memory["health_score"] < 50:
+    if score < 50:
         messages.append("Your health score dropped.")
 
     if messages:

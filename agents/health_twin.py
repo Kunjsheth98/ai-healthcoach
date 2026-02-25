@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 from core.config import client
 from core.memory import save_memory
+from core.ai_wrapper import call_ai
 
 # --------------------------------------------------
 # SHOULD UPDATE TWIN
@@ -35,34 +36,34 @@ def generate_health_twin(memory):
 
     recent_logs = logs[-10:]
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
-You are a Personal Health Analysis AI.
+    
+    messages=[
+        {
+            "role": "system",
+            "content": f"""
+    You are a Personal Health Analysis AI.
 
-Analyze user's recent health behavior and discover patterns.
+    Analyze user's recent health behavior and discover patterns.
 
-Data:
-{recent_logs}
+    Data:
+    {recent_logs}
 
-Find correlations such as:
-- sleep vs energy
-- hydration vs health score
-- exercise vs mood
+    Find correlations such as:
+    - sleep vs energy
+    - hydration vs health score
+    - exercise vs mood
 
-Return 3–5 short personalized insights starting with:
-"Your body responds well when..."
-""",
-            }
-        ],
-    )
+    Return 3–5 short personalized insights starting with:
+    "Your body responds well when..."
+    """,
+                }
+            ]
 
-    insights = response.choices[0].message.content
+    insights_text = call_ai(memory, messages)
+    if not insights_text:
+        return
 
-    memory["health_twin_insights"] = insights.split("\n")
+    memory["health_twin_insights"] = insights_text.split("\n")
     memory["last_twin_update"] = datetime.now().isoformat()
 
     save_memory(memory)

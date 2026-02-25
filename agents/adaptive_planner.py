@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import datetime, timedelta
 from core.config import client
-
+from core.ai_wrapper import call_ai
 # --------------------------------------------------
 # ANALYZE HABIT DATA
 # --------------------------------------------------
@@ -16,9 +16,9 @@ def analyze_recent_behavior(memory):
 
     recent = logs[-7:]
 
-    avg_sleep = sum(l["sleep"] for l in recent) / len(recent)
-    avg_water = sum(l["water"] for l in recent) / len(recent)
-    exercise_days = sum(1 for l in recent if l["exercise"])
+    avg_sleep = sum(l.get("sleep", 6) for l in recent) / len(recent)
+    avg_water = sum(l.get("water", 0) for l in recent) / len(recent)
+    exercise_days = sum(1 for l in recent if l.get("exercise", False))
 
     insights = []
 
@@ -48,33 +48,38 @@ def adaptive_life_planner(memory):
 
     tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
-You are an Indian AI Life Planner.
+    
+    messages=[
+        {
+            "role": "system",
+            "content": f"""
+    You are an Indian AI Life Planner.
 
-User Health Score: {memory['health_score']}
-Energy Level: {memory['energy_level']}
-Goal: {memory.get('health_goals','fitness')}
+    User Health Score: {memory['health_score']}
+    Energy Level: {memory['energy_level']}
+    Brain Mode: {memory.get('brain_state',{}).get('mode','wellness')}
+    Intervention: {memory.get('brain_state',{}).get('intervention','normal')}
+    Burnout Risk: {memory.get('burnout_risk_level',0)}
+    Goal: {memory.get('health_goals','fitness')}
 
-Recent habit insights:
-{insights}
+    Recent habit insights:
+    {insights}
 
-Create a personalized DAILY ROUTINE for tomorrow including:
-- wake-up suggestion
-- meals
-- hydration plan
-- exercise suggestion
-- sleep timing
+    Create a personalized DAILY ROUTINE for tomorrow including:
+    - wake-up suggestion
+    - meals
+    - hydration plan
+    - exercise suggestion
+    - sleep timing
 
-Keep it simple, motivating and realistic.
-""",
-            }
-        ],
-    )
+    Keep it simple, motivating and realistic.
+    """,
+                }
+            ]
+
+    plan = call_ai(memory, messages)
+    if not plan:
+        plan = "Focus on hydration, 7 hours sleep, and 20 minutes walking tomorrow"
 
     st.subheader(f"🧭 Adaptive Plan for {tomorrow}")
-    st.success(response.choices[0].message.content)
+    st.success(plan)

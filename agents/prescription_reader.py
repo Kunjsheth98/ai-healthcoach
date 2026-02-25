@@ -3,13 +3,14 @@ import base64
 from core.config import client
 from core.memory import save_memory
 from agents.medicine_reminder import generate_medicine_schedule
-
+from core.ai_wrapper import call_ai
 # --------------------------------------------------
 # IMAGE TO BASE64
 # --------------------------------------------------
 
 
 def encode_image(uploaded_file):
+    uploaded_file.seek(0)
     return base64.b64encode(uploaded_file.read()).decode("utf-8")
 
 
@@ -22,41 +23,43 @@ def analyze_prescription(uploaded_file, memory):
 
     image_base64 = encode_image(uploaded_file)
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": """
-You are a medical assistant.
+    messages=[
+        {
+            "role": "system",
+             "content": """
+    You are a medical assistant.
 
-Read the prescription image and extract:
+    Read the prescription image and extract:
 
-- medicine name
-- dosage
-- frequency (morning/night/etc)
+    - medicine name
+    - dosage
+    - frequency (morning/night/etc)
 
-Return ONLY a clean list like:
+    Return ONLY a clean list like:
 
-Medicine - Dosage - Frequency
-""",
-            },
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "Analyze this prescription."},
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
-                    },
-                ],
-            },
-        ],
-    )
+    Medicine - Dosage - Frequency
+    """,
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Analyze this prescription."},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+                        },
+            ],
+        },
+    ]
 
-    result = response.choices[0].message.content
+    result = call_ai(memory, messages)
+    if not result:
+        return "⚠️ Unable to analyze prescription right now."
 
-    memory["medicines"].append(result)
+    memory.setdefault("medicines", [])
+
+    if result and result not in memory["medicines"]:
+        memory["medicines"].append(result)
     generate_medicine_schedule(memory)
 
     save_memory(memory)

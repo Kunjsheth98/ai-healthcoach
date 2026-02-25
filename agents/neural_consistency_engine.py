@@ -6,8 +6,15 @@ def neural_consistency_engine(memory):
 
     inconsistency = False
 
-    if goal == "weight_loss":
-        if calories > 2500 and not exercise:
+    profile = memory.get("profile", {})
+    weight = profile.get("weight_kg", 70)
+
+    # Rough maintenance estimate
+    maintenance = weight * 30
+
+    if goal == "Fat loss":
+        if calories > maintenance and not exercise:
             inconsistency = True
 
     memory["consistency_flag"] = inconsistency
+    memory["consistency_score_flag"] = not inconsistency
