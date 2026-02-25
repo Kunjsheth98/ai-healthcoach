@@ -4,7 +4,7 @@ from core.config import client
 from core.ai_wrapper import call_ai
 
 def autonomous_planner_agent(memory):
-
+    
     tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
     mode = memory.get("life_os_mode", "wellness")
 
@@ -47,10 +47,35 @@ def autonomous_planner_agent(memory):
         planner_intensity = "high"
 
     suppression = memory.get("suppression_state", "none")
-
     if suppression == "high":
         planner_intensity = "very_light"
-        
+
+    sleep_pattern = memory.get("sleep_pattern", "")
+    energy_level = memory.get("energy_level", 5)
+
+    realism_rules = ""
+    intent = memory.get("primary_intent", "general") 
+
+    lifestyle = memory.get("lifestyle", {})
+    sleep_pattern = lifestyle.get("sleep_pattern", "")
+    preferred_wake = lifestyle.get("preferred_wake_time", None)
+    energy_level = memory.get("energy_level", 5)
+
+    wake_anchor_rule = ""
+    if preferred_wake:
+        wake_anchor_rule = f"Anchor the day around wake time: {preferred_wake}. Do not shift drastically."
+    if sleep_pattern == "Irregular":
+        realism_rules += "Do NOT enforce drastic wake-up time shifts. Stabilize gradually.\n"
+
+    if energy_level <= 4:
+        realism_rules += "Avoid high-intensity routines. Keep effort light.\n"
+
+    if intent == "sleep":
+        realism_rules += "Primary goal is sleep stabilization, not productivity.\n"
+
+    if intent == "stress":
+        realism_rules += "Reduce cognitive overload. Focus on calm structure.\n"    
+
     messages=[
             {
                 "role": "system",
@@ -65,6 +90,23 @@ def autonomous_planner_agent(memory):
     Intervention: {memory.get('brain_state',{}).get('intervention')}
     Burnout Risk: {memory.get('burnout_risk_level',0)}
     Planner Intensity Level: {planner_intensity}
+    Primary Focus Today: {intent}
+
+    Intent Rules:
+    If intent is "sleep":
+    Prioritize sleep stabilization, no drastic wake-up changes.
+
+    If intent is "stress":
+    Prioritize recovery, breathing, low cognitive load.
+
+    If intent is "movement":
+    Prioritize light physical activation and consistency.
+
+    If intent is "general":
+    Follow intensity-based planning.
+    Realism Constraints: {realism_rules}
+    Wake Anchor:
+    {wake_anchor_rule}
     Instructions:
     If Planner Intensity Level = very_light:
     Create recovery focused day.

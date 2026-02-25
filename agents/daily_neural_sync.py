@@ -257,5 +257,17 @@ def daily_neural_sync(memory):
     else:
         memory["suppression_state"] = "none"
 
+    # ---- Companion Feedback ----
+    insight = ""
 
+    if memory.get("primary_intent") == "sleep":
+        insight = "Sleep consistency is your focus. Small improvements daily."
+
+    elif memory.get("primary_intent") == "stress":
+        insight = "Energy recovery matters more than intensity today."
+
+    elif memory.get("primary_intent") == "movement":
+        insight = "Consistency beats intensity. Keep moving lightly."
+
+    memory["daily_companion_insight"] = insight
     return memory

@@ -195,7 +195,30 @@ with tab_brain:
 
         if col3.button("🏋️ Start Movement"):
             memory["primary_intent"] = "movement"
-            
+
+    # ---- Companion Guided Intro ----
+    if "companion_intro_shown" not in memory:
+
+        st.markdown("### 👋 How This Works")
+
+        st.write(
+            """
+            This is your AI Health Companion.
+
+            1️⃣ Choose what you want to improve today.  
+            2️⃣ I adapt your daily plan automatically.  
+            3️⃣ Use Coach if you feel stuck.  
+            4️⃣ Do Daily Sync once per day.
+            """
+        )
+
+        if st.button("Got it"):
+
+            memory["companion_intro_shown"] = True
+    # ---- Show Daily Companion Insight ----
+    if memory.get("daily_companion_insight"):
+        st.success(memory["daily_companion_insight"])
+
     suppression = memory.get("suppression_state", "none")
     if suppression == "high":
         st.warning("🧠 Recovery Mode Active — Focus on rest today.")
@@ -267,6 +290,7 @@ with tab_brain:
         sleep_pattern = st.selectbox(
             "Your sleep pattern", ["Late sleeper", "Early riser", "Irregular"]
         )
+        wake_time = st.time_input("Preferred wake-up time (optional)")
 
         goal_type = st.selectbox(
             "Main health goal",
@@ -296,6 +320,7 @@ with tab_brain:
                 "activity_type": activity,
                 "sleep_pattern": sleep_pattern,
                 "goal": goal_type,
+                "preferred_wake_time" : str(wake_time) if wake_time else None,
             }
 
             memory["onboarding_complete"] = True
@@ -534,7 +559,110 @@ with tab_brain:
         result = analyze_food_image(food_image, memory)
         st.info(result)
 
-    st.subheader("Daily Check-In")
+    emotional_reward_engine(memory)
+
+    if memory.get("emotional_rewards"):
+        st.subheader("❤️ Today's Wins")
+        for reward in memory["emotional_rewards"]:
+            st.success(reward)
+
+    st.divider()
+
+    identity_engine_ui(memory)
+    st.divider()
+
+    st.subheader("📊 Today Summary")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("Sleep", f"{memory.get('sleep_hours', 0)} hrs")
+
+    with col2:
+        st.metric("Energy", memory.get("energy_level", 0))
+
+    with col3:
+        st.metric("Mood", memory.get("daily_mood", 0))
+
+    st.divider()
+
+    st.subheader("🧠 Current State")
+
+    sleep = memory.get("sleep_hours", 0)
+    energy = memory.get("energy_level", 0)
+    mood = memory.get("daily_mood", 0)
+
+    state_messages = []
+
+    # Sleep interpretation
+    if sleep <= 4:
+        state_messages.append("⚠️ Sleep debt detected. Prioritize recovery.")
+    elif sleep <= 6:
+        state_messages.append("😐 Moderate sleep. Avoid pushing too hard.")
+    else:
+        state_messages.append("✅ Well rested. Body ready.")
+
+    # Energy interpretation
+    if energy <= 4:
+        state_messages.append("🔋 Low energy window.")
+    elif energy <= 7:
+        state_messages.append("⚖️ Balanced energy.")
+    else:
+        state_messages.append("🔥 High output window.")
+
+    # Mood interpretation
+    if mood <= 4:
+        state_messages.append("💛 Emotional care recommended.")
+    elif mood <= 7:
+        state_messages.append("🙂 Stable emotional state.")
+    else:
+        state_messages.append("🌟 Positive emotional momentum.")
+
+    for msg in state_messages:
+        st.write(msg)
+
+    st.divider()
+
+    st.subheader("🔮 7-Day Projection")
+
+    sleep = memory.get("sleep_hours", 0)
+    energy = memory.get("energy_level", 0)
+    mood = memory.get("daily_mood", 0)
+
+    projection = ""
+
+    # Projection logic
+    if sleep <= 4 and energy <= 4:
+        projection = "If this continues for 7 days, burnout probability increases significantly."
+    elif sleep <= 6:
+        projection = "In 7 days, mild fatigue accumulation may appear."
+    elif energy >= 8 and sleep >= 7:
+        projection = "In 7 days, performance momentum will compound."
+    elif mood <= 4:
+        projection = "Emotional exhaustion risk increases within a week."
+    else:
+        projection = "Current pattern is stable. Small improvements will compound."
+
+    st.warning(projection)
+
+    st.divider()
+
+    focus = memory.get("primary_intent", "general")
+
+    if focus == "sleep":
+        st.info("Your focus is sleep stabilization. Protect your night.")
+    elif focus == "stress":
+        st.info("Today is about lowering pressure, not increasing output.")
+    elif focus == "movement":
+        st.info("Small movement done daily beats intensity.")
+    else:
+        st.info("Build consistency first. Intensity comes later.")
+
+    health_master_brain(memory)
+
+
+with tab_sync:
+    st.header("🔄 Daily Sync")
 
     sleep = st.slider("Sleep Hours", 0, 12, memory.get("sleep_hours", 6))
     energy = st.slider("Energy", 1, 10, memory.get("energy_level", 5))
@@ -544,7 +672,6 @@ with tab_brain:
     
     exercise = st.checkbox("Exercise done", memory.get("exercise_done", False))
     water = st.number_input("Water glasses", 0, 20, memory.get("water_intake", 0))
-
 
     if st.button("Save Check-In"):
         memory["daily_mood"] = mood
@@ -559,12 +686,6 @@ with tab_brain:
         memory["exercise_done"] = exercise
         memory["water_intake"] = water
 
-        memory["engagement_score"] = memory.get("engagement_score", 0) + 1
-
-        add_xp(memory)
-        update_streak(memory)
-        if memory["engagement_score"] % 5 == 0:
-            st.success("🔥 Amazing consistency! Your future self is proud of you.")
         # ---- Track Weight History ----
         current_weight = memory.get("profile", {}).get("weight_kg")
 
@@ -574,29 +695,21 @@ with tab_brain:
             memory["weight_history"] = memory["weight_history"][-30:]
             memory.setdefault("daily_health_log", [])
             memory["daily_health_log"].append(
-             {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
+            {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
             )
 
+        memory["engagement_score"] = memory.get("engagement_score", 0) + 1
+
+        add_xp(memory)
+        update_streak(memory)
+        if memory["engagement_score"] % 5 == 0:
+            st.success("🔥 Amazing consistency! Your future self is proud of you.")
         calculate_health_score(memory)
         daily_neural_sync(memory)
         from agents.habit_reinforcement_engine import neural_habit_engine
         neural_habit_engine(memory)
-        st.success("Check-in saved!")
+        st.success("Check-in saved!")    
 
-
-    emotional_reward_engine(memory)
-
-    if memory.get("emotional_rewards"):
-        st.subheader("❤️ Today's Wins")
-        for reward in memory["emotional_rewards"]:
-            st.success(reward)
-
-    st.divider()
-
-    identity_engine_ui(memory)
-    st.divider()
-
-    health_master_brain(memory)
 
 # =====================================================
 # CHAT / INSIGHTS / PLANNER / RECORDS / ADMIN
@@ -605,6 +718,27 @@ with tab_brain:
 
 with tab_coach:
 
+    st.header("💬 Coach")
+
+    # ---- Guided Entry Prompts ----
+    if "coach_prompt_shown" not in memory:
+
+        intent = memory.get("primary_intent", "general")
+
+        if intent == "sleep":
+            suggestion = "Want a 7-day sleep reset plan?"
+        elif intent == "stress":
+            suggestion = "Feeling overwhelmed? Want a 3-minute reset?"
+        elif intent == "movement":
+            suggestion = "Want a beginner movement routine?"
+        else:
+            suggestion = "Tell me what you're struggling with today."
+
+        st.info(suggestion)
+
+        if st.button("Yes, help me"):
+            memory["coach_auto_message"] = suggestion
+            memory["coach_prompt_shown"] = True
     reply = ""
 
     chats = list_chats()
@@ -641,6 +775,10 @@ with tab_coach:
     # Chat input ALWAYS renders
     uploaded_image = st.file_uploader("Upload image (optional)", key="chat_img")
     user_msg = st.chat_input("Ask Asha...")
+    # ---- Auto-trigger Coach Message ----
+    if memory.get("coach_auto_message"):
+        auto_msg = memory.pop("coach_auto_message")
+        user_msg = auto_msg
 
     if user_msg:
 
