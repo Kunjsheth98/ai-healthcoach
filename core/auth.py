@@ -2,7 +2,7 @@ import json
 import os
 import hashlib
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 USERS_FILE = os.path.join(BASE_DIR, "users", "users.json")
 
 
@@ -46,55 +46,36 @@ def hash_password(password, salt=None):
 
 
 def register_user(username, password):
-
     init_user_db()
 
     with open(USERS_FILE, "r") as f:
         users = json.load(f)
 
     if username in users:
-        return False, "User already exists"
+        return False, "User already exists."
 
-    users[username] = hash_password(password)
+    hashed = hashlib.sha256(password.encode()).hexdigest()
+    users[username] = hashed
 
     with open(USERS_FILE, "w") as f:
-        json.dump(users, f, indent=4)
+        json.dump(users, f)
 
-    # create personal folder
-    os.makedirs(f"users/{username}", exist_ok=True)
-
-    return True, "User created successfully"
+    return True, "User registered successfully!"
 
 
 # -------------------------------------
 # LOGIN USER
 # -------------------------------------
 
-
 def login_user(username, password):
-
     init_user_db()
 
     with open(USERS_FILE, "r") as f:
         users = json.load(f)
 
-    if username not in users:
-        return False
+    hashed = hashlib.sha256(password.encode()).hexdigest()
 
-    stored = users[username]
+    if username in users and users[username] == hashed:
+        return True
 
-    try:
-        salt_hex, stored_hash = stored.split(":")
-        salt = bytes.fromhex(salt_hex)
-
-        new_hash = hashlib.pbkdf2_hmac(
-            'sha256',
-            password.encode(),
-            salt,
-            100000
-        ).hex()
-
-        return new_hash == stored_hash
-
-    except Exception:
-        return False
+    return False
