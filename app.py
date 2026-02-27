@@ -50,7 +50,7 @@ from agents.medicine_reminder import medicine_reminder_agent
 from agents.voice_engine import speak_text
 from agents.body_composition import calculate_body_fat
 from agents.daily_neural_sync import daily_neural_sync
-
+from agents.stress_engine import stress_engine
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
 from admin.control_center import admin_control_center
@@ -176,10 +176,21 @@ if st.session_state.user in ADMIN_USERS:
 # DASHBOARD
 # =====================================================
 with tab_brain:
+    from datetime import datetime
+
     st.header("🏠 Today")
-    # ---- Companion Greeting ----
-    companion_msg = companion_message(memory)
-    st.info(companion_msg)
+
+    current_hour = datetime.now().hour
+
+    if current_hour < 12:
+        greeting = "Good morning"
+    elif current_hour < 17:
+        greeting = "Good afternoon"
+    else:
+        greeting = "Good evening"
+
+    st.info(f"{greeting}. Let’s build consistency today.")
+
     # ---- Intent Selection (First Time Only) ----
     if "primary_intent" not in memory:
 
@@ -195,6 +206,12 @@ with tab_brain:
 
         if col3.button("🏋️ Start Movement"):
             memory["primary_intent"] = "movement"
+
+    stress_engine(memory)
+    if memory.get("stress_recommendations"):
+        st.subheader("🧘 Stress Support")
+    for r in memory["stress_recommendations"]:
+        st.warning(r)
 
     # ---- Companion Guided Intro ----
     if "companion_intro_shown" not in memory:
@@ -493,8 +510,10 @@ with tab_brain:
     with r1:
         sleep_hours = memory.get("sleep_hours", 0)
         # Cap sleep at 7 for scoring psychology
-        sleep_score = min(sleep_hours, 7)
-        progress_ring(sleep_score, 7, "Sleep")
+        sleep_hours = memory.get("sleep_hours", 0)
+        sleep_percentage = min(int((sleep_hours / 8) * 100), 100)
+
+        progress_ring(sleep_percentage, 100, "Sleep")
 
     with r2:
         progress_ring(memory.get("water_intake", 0), 8, "Hydration")
@@ -520,12 +539,6 @@ with tab_brain:
         st.subheader("🔮 Health Outlook")
         st.warning(memory["future_projection"])
 
-    gamification_ui(memory)
-    morning_briefing_ui(memory)
-    nutritionist_brain(memory)
-    metabolic_predictor(memory)
-    behavior_brain(memory)
-    medicine_reminder_agent(memory)
 
     if memory.get("nutrition_insights"):
         st.subheader("🧠 AI Nutritionist Insights")
@@ -549,15 +562,6 @@ with tab_brain:
     st.metric("USD Spent Today", round(cost, 3))
 
     st.divider()
-    st.subheader("📸 Upload Food Image")
-
-    food_image = st.file_uploader("Upload meal photo")
-
-    if food_image:
-        from agents.food_vision_engine import analyze_food_image
-
-        result = analyze_food_image(food_image, memory)
-        st.info(result)
 
     emotional_reward_engine(memory)
 
@@ -617,6 +621,13 @@ with tab_brain:
         state_messages.append("🙂 Stable emotional state.")
     else:
         state_messages.append("🌟 Positive emotional momentum.")
+
+    if memory.get("stress_score", 0) >= 4:
+        st.error("⚠ High stress detected. Prioritize recovery.")
+    elif memory.get("stress_score", 0) >= 2:
+        st.warning("Moderate stress. Stay mindful today.")
+    else:
+        st.success("Stable state. Keep building.")
 
     for msg in state_messages:
         st.write(msg)
@@ -685,6 +696,24 @@ with tab_sync:
         memory["energy_level"] = energy
         memory["exercise_done"] = exercise
         memory["water_intake"] = water
+
+        st.divider()
+
+        nutritionist_brain(memory)
+        metabolic_predictor(memory)
+        behavior_brain(memory)
+        medicine_reminder_agent(memory)
+
+        st.subheader("📸 Upload Food Image")
+
+        food_image = st.file_uploader("Upload meal photo")
+
+        if food_image:
+            from agents.food_vision_engine import analyze_food_image
+
+            result = analyze_food_image(food_image, memory)
+            st.info(result)
+
 
         # ---- Track Weight History ----
         current_weight = memory.get("profile", {}).get("weight_kg")
@@ -856,6 +885,7 @@ with tab_trends:
         premium_lock()
 
 with tab_planner:
+    gamification_ui(memory)
     autonomous_planner_agent(memory)
 
     if has_premium_access("adaptive_planner"):
