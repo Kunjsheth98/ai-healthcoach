@@ -218,7 +218,20 @@ with tab_brain:
     # ================= CLEAN STRUCTURED ONBOARDING =================
 
     if not memory.get("onboarding_complete"):
-
+        st.markdown("""
+        <div style="
+        padding:18px;
+        border-radius:14px;
+        background:#f8fafc;
+        border:1px solid #e5e7eb;
+        margin-bottom:20px;">
+        <h3 style="margin-bottom:6px;">🧠 Initial Health Calibration</h3>
+        <p style="color:#475569;">
+        This helps your AI adapt your sleep, stress, and movement plan intelligently.
+        It takes less than a minute.
+        </p>
+        </div>
+        """, unsafe_allow_html=True)
         st.subheader("🧬 Let's Build Your Health Profile")
 
         st.markdown("### 👤 Basic Information")
