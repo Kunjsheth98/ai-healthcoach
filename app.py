@@ -215,6 +215,82 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 with tab_brain:
 
+    # ================= CLEAN STRUCTURED ONBOARDING =================
+
+    if not memory.get("onboarding_complete"):
+
+        st.subheader("🧬 Let's Build Your Health Profile")
+
+        st.markdown("### 👤 Basic Information")
+
+        full_name = st.text_input("Full Name")
+        age = st.number_input("Age", 10, 100, 25)
+        gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+        height = st.number_input("Height (cm)", 100, 220, 170)
+        weight = st.number_input("Weight (kg)", 30, 200, 70)
+
+        diseases = st.multiselect(
+            "Any Known Medical Conditions?",
+            ["Diabetes", "Thyroid", "Hypertension", "PCOS", "Heart Issues", "Asthma"],
+        )
+
+        medications = st.text_input("Current Medications (optional)")
+
+        st.markdown("### 🧠 Lifestyle Profile")
+
+        discipline = st.slider("How disciplined are you with routines?", 1, 10, 5)
+
+        activity = st.selectbox(
+            "Your activity type",
+            ["Sedentary (desk work)", "Moderately active", "Very active"],
+        )
+
+        sleep_pattern = st.selectbox(
+            "Your sleep pattern", ["Late sleeper", "Early riser", "Irregular"]
+        )
+        wake_time = st.time_input("Preferred wake-up time (optional)")
+
+        goal_type = st.selectbox(
+            "Main health goal",
+            [
+                "Fat loss",
+                "Muscle gain",
+                "Energy boost",
+                "Stress reduction",
+                "General fitness",
+            ],
+        )
+
+        if st.button("Complete Setup"):
+
+            memory["profile"] = {
+                "name": full_name,
+                "age": age,
+                "gender": gender,
+                "height_cm": height,
+                "weight_kg": weight,
+                "diseases": diseases,
+                "medications": medications,
+            }
+
+            memory["lifestyle"] = {
+                "discipline_score": discipline,
+                "activity_type": activity,
+                "sleep_pattern": sleep_pattern,
+                "goal": goal_type,
+                "preferred_wake_time" : str(wake_time) if wake_time else None,
+            }
+
+            memory["onboarding_complete"] = True
+
+            st.success("Profile Created Successfully ✅")
+            save_memory(memory)
+            st.rerun()
+
+        st.stop()
+
+
+
     if memory.get("first_visit_done") != True:
         st.markdown("""
         ### 👋 Welcome to Your AI Health OS
@@ -378,79 +454,6 @@ with tab_brain:
     st.subheader("🧠 System Mode")
     st.info(f"Mode: {mode.upper()} | Burnout Risk: {burnout}")
     
-    # ================= CLEAN STRUCTURED ONBOARDING =================
-
-    if not memory.get("onboarding_complete"):
-
-        st.subheader("🧬 Let's Build Your Health Profile")
-
-        st.markdown("### 👤 Basic Information")
-
-        full_name = st.text_input("Full Name")
-        age = st.number_input("Age", 10, 100, 25)
-        gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-        height = st.number_input("Height (cm)", 100, 220, 170)
-        weight = st.number_input("Weight (kg)", 30, 200, 70)
-
-        diseases = st.multiselect(
-            "Any Known Medical Conditions?",
-            ["Diabetes", "Thyroid", "Hypertension", "PCOS", "Heart Issues", "Asthma"],
-        )
-
-        medications = st.text_input("Current Medications (optional)")
-
-        st.markdown("### 🧠 Lifestyle Profile")
-
-        discipline = st.slider("How disciplined are you with routines?", 1, 10, 5)
-
-        activity = st.selectbox(
-            "Your activity type",
-            ["Sedentary (desk work)", "Moderately active", "Very active"],
-        )
-
-        sleep_pattern = st.selectbox(
-            "Your sleep pattern", ["Late sleeper", "Early riser", "Irregular"]
-        )
-        wake_time = st.time_input("Preferred wake-up time (optional)")
-
-        goal_type = st.selectbox(
-            "Main health goal",
-            [
-                "Fat loss",
-                "Muscle gain",
-                "Energy boost",
-                "Stress reduction",
-                "General fitness",
-            ],
-        )
-
-        if st.button("Complete Setup"):
-
-            memory["profile"] = {
-                "name": full_name,
-                "age": age,
-                "gender": gender,
-                "height_cm": height,
-                "weight_kg": weight,
-                "diseases": diseases,
-                "medications": medications,
-            }
-
-            memory["lifestyle"] = {
-                "discipline_score": discipline,
-                "activity_type": activity,
-                "sleep_pattern": sleep_pattern,
-                "goal": goal_type,
-                "preferred_wake_time" : str(wake_time) if wake_time else None,
-            }
-
-            memory["onboarding_complete"] = True
-
-            st.success("Profile Created Successfully ✅")
-            save_memory(memory)
-            st.rerun()
-
-        st.stop()
 
     calculate_body_fat(memory)
     if memory.get("body_fat_percentage"):
