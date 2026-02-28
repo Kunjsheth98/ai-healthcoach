@@ -82,5 +82,6 @@ def emotional_imprint_engine(memory, user_message):
 
     memory["imprint_identity"] = identity
     memory["identity_stability"] = 0  # evolves later
+    memory["attachment_depth"] = "forming"
 
     return imprint

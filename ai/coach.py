@@ -4,6 +4,7 @@
 
 from core.config import client
 from core.ai_wrapper import call_ai
+from core.memory import save_memory
 
 # ---------------- SAFETY GUARDRAILS ----------------
 from core.medical_guardrails import (
@@ -27,6 +28,7 @@ from agents.mental_engine import process_mental_state, post_response_learning
 from core.subscription import has_premium_access
 from core.emotional_imprint_engine import emotional_imprint_engine
 from core.dopamine_engine import dopamine_trigger
+from core.emotional_resonance_engine import update_emotional_resonance
 
 from agents.behavioral_core import (
     update_behavioral_patterns,
@@ -102,11 +104,18 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     if has_premium_access("mental_engine"):
         process_mental_state(memory, message)
 
+    update_emotional_resonance(memory, message)    
+
     # -------------------------------------------------
     # 🧠 PROFILE + WEIGHT TREND CONTEXT
     # -------------------------------------------------
 
     emotion = memory.get("emotional_state", "balanced")
+    # Silent mirroring
+    if emotion in ["low", "overwhelmed"]:
+        message += "\nUser seems emotionally strained."
+    elif emotion == "motivated":
+        message += "\nUser is currently in motivated state."
     long_term_summary = memory.get("long_term_summary", "")
 
     profile = memory.get("profile", {})
@@ -170,40 +179,32 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     brain_mode = brain.get("mode", "wellness")
     intervention = brain.get("intervention", "normal")
 
-    tone = "balanced"
+    tone = "calm, balanced and supportive"
 
-    if intervention == "force_recovery":
-        tone = "calm, slow, grounding and recovery-focused"
+    burnout = memory.get("burnout_risk_level", 0)
+    streak = memory.get("streak_days", 0)
+    personality = memory.get("personality_type", "Balanced Guide")
 
-    elif intervention == "intensity_reduction":
-        tone = "supportive, structured and balanced"
+    # Silent fatigue softening
+    if burnout >= 70:
+        tone = "grounded, calm, protective and pressure-free"
 
-    else:
-        if brain_mode == "performance":
-            tone = "focused, goal-driven and high performance"
-        elif brain_mode == "discipline":
-            tone = "firm, structured and accountability-focused"
-        elif brain_mode == "resilience":
-            tone = "supportive and emotionally grounding"
-        else:
-            tone = "calm, balanced and wellness-oriented"   
+    # Silent confidence build
+    elif streak >= 10:
+        tone = "confident, structured and forward-driving"
 
-    suppression = memory.get("suppression_state", "none")
+    # Silent accountability shift
+    elif streak >= 5:
+        tone = "supportive but slightly firm"
 
-    # ⚡ REFLEX HARD BRAKE
+    # Personality subtle alignment
+    if personality == "Analytical":
+        tone += ", logical and data-backed"
+    elif personality == "Emotional":
+        tone += ", empathetic and validating"
+    elif personality == "Disciplined":
+        tone += ", structured and direct"
 
-    if memory.get("reflex_alert"):
-        suppression = "high"
-        tone = "calm, grounding and stabilizing"
-
-    # 🧘 META SILENCE INTELLIGENCE
-    if memory.get("meta_strategy") == "prioritize_sleep":
-        suppression = "high"
-
-    if suppression == "high":
-        tone = "calm, grounding and pressure-free"
-    elif suppression == "moderate":
-        tone = "supportive and balanced"       
 # ---------------- PHASE 2 BEHAVIOR UPDATE ----------------
     update_behavioral_patterns(memory)
     predict_risk(memory)
@@ -272,6 +273,9 @@ If patterns exist, mention them confidently.
 User emotional state: {emotion}
 Mental Pattern Trend: {memory.get("mental_pattern", "stable")}
 
+Burnout Risk: {memory.get("burnout_risk_level",0)}
+System State: {memory.get("system_state")}
+
 Health score: {memory.get('health_score', 50)}
 
 Goal Mode: {memory.get("goal_mode", "general")}
@@ -297,6 +301,8 @@ Mood Trend: {memory.get('mood_trend', 'stable')}
 Behavior Patterns:
 {memory.get("behavior_patterns")}
 
+Global Intensity Level: {memory.get('global_intensity_level','moderate')}
+
 Historical Signals:
 {memory.get("pattern_memory")[-3:] if memory.get("pattern_memory") else "No strong pattern yet"}
 
@@ -305,6 +311,11 @@ Risk Forecast:
 Identity Lock:
 {memory.get("identity_lock", {}).get("current_identity")}
 Reinforce this identity subtly in tone and encouragement.
+
+Tone Adjustment:
+If Global Intensity Level = very_light → Be calming, protective, reduce pressure.
+If moderate → Balanced supportive tone.
+If high → Energetic, performance-driven tone.
 
 STRICT RULES:
 - Never diagnose diseases
@@ -352,18 +363,17 @@ After giving advice, explain briefly why this suggestion was made based on user 
     # -------------------------------------------------
     # 🤖 OPENAI CALL
     # -------------------------------------------------
-
+    imprint_message = emotional_imprint_engine(memory, message)
+    if imprint_message:
+        save_memory(memory)
+        return imprint_message
+    
     reply = call_ai(memory, messages)
 
     # 🔥 Dopamine Reinforcement Layer
     dopamine = dopamine_trigger(memory)
     if dopamine:
         reply = (reply or "") + "\n\n" + dopamine
-
-    # 🔥 Emotional Imprint Layer (First Interaction Only)
-    imprint = emotional_imprint_engine(memory, message)
-    if imprint:
-        reply = imprint + "\n\n" + (reply or "")
 
     # 🚨 RELAPSE RESPONSE BOOST
     if memory.get("relapse_risk"):
@@ -382,8 +392,9 @@ After giving advice, explain briefly why this suggestion was made based on user 
         reply += "\n\n🔥 You're building strong momentum. Keep showing up."
 
     # 🔥 Identity Reinforcement
-    if memory.get("imprint_identity") and engagement > 3:
-        reply += f"\n\nYou're stepping into your identity: {memory.get('imprint_identity')}."    
+    identity = memory.get("imprint_identity")
+    if identity and memory.get("streak_days", 0) >= 7:
+        reply += f"\n\nYou're becoming {identity}."   
         
         
 
@@ -420,10 +431,16 @@ After giving advice, explain briefly why this suggestion was made based on user 
     if any(word in reply.lower() for word in unsafe_words):
         reply += "\n\n⚠️ This is general wellness guidance, not medical advice."
     # AI CONFIDENCE SCORE
-    confidence = 100 - (memory.get("burnout_risk_level", 0) *5)
+    confidence = 100 - (memory.get("burnout_risk_level", 0) * 8)
     if memory.get("mental_pattern") == "stress_increasing":
         confidence -= 10
     if memory.get("behavior_drift"):
         confidence -= 5    
     memory["last_ai_confidence"] = max(40, confidence)
+
+    identity = memory.get("imprint_identity")
+
+    if identity and memory.get("streak_days", 0) >= 3:
+        reply += f"\n\nYou're stepping into: {identity}."
+
     return reply

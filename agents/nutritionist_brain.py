@@ -9,6 +9,10 @@ from core.ai_wrapper import call_ai
 
 def nutritionist_brain(memory):
 
+    global_intensity = memory.get("global_intensity_level", "moderate")
+    calorie_target = memory.get("daily_calorie_target")
+
+
     mode = memory.get("life_os_mode", "wellness")
 
      # ================= CENTRAL BRAIN OVERRIDE =================
@@ -42,6 +46,8 @@ Increase protein and hydration.
     food_log = memory["daily_food_log"]
 
     if not food_log:
+        st.subheader("🥗 AI Nutritionist")
+        st.info("Log your meals to receive adaptive weekly nutrition intelligence.")
         return
 
     # -------------------------------------------------
@@ -96,8 +102,21 @@ Increase protein and hydration.
             "🔥 Weekly calorie intake is high. Add walking or lighter dinners."
         )
 
+    if global_intensity == "very_light":
+        insights.append("⚡ Focus on recovery nutrition: hydration, magnesium, simple digestion.")
+
+    elif global_intensity == "high":
+        insights.append("🔥 Increase protein and structured meals to support higher load.")   
+
+    if calorie_target is not None:
+        insights.append(f"🎯 Today's adaptive calorie target: {calorie_target} kcal.")     
+
+    if memory.get("weekly_calorie_adjustment"):
+        insights.append("📊 Calorie target auto-adjusted based on last 7 days intake trend.")    
+
     if not insights:
         insights.append("✅ Your eating pattern looks balanced this week. Keep going!")
+
 
 
     brain = memory.get("brain_state", {})
@@ -113,6 +132,53 @@ Increase protein and hydration.
     Brain Mode: {brain_mode}
     Detected Weekly Insights: {insights}
     Identity: {memory.get("identity_lock", {}).get("current_identity")}
+    Imprint Identity: {memory.get('imprint_identity','emerging')}
+    Emotional Archetype: {memory.get('emotional_archetype','neutral')}
+
+    Identity Maturity Level: {memory.get("identity_maturity","forming")}
+
+    Strategic Focus: {memory.get("strategic_focus","balanced")}
+
+    If Strategic Focus = recovery:
+    Avoid calorie deficit.
+
+    If Strategic Focus = performance:
+    Optimize protein and macro structure.
+
+    If Strategic Focus = calm_regulation:
+    Prioritize digestion-friendly foods.
+
+    If Identity Maturity = forming:
+    Avoid aggressive calorie restriction.
+    Focus on simple habit upgrades.
+
+    If Identity Maturity = emerging:
+    Encourage structured meal timing and protein focus.
+
+    If Identity Maturity = solid:
+    Emphasize macro awareness and consistency.
+
+    If Identity Maturity = integrated:
+    Align nutrition tightly with performance and body composition goals.
+
+    If Archetype = overloaded:
+    Avoid aggressive calorie restriction.
+
+    If Archetype = self_critical:
+    Avoid guilt framing.
+
+    If Archetype = achiever:
+    Emphasize performance nutrition.
+    Global Intensity: {global_intensity}
+
+    If Global Intensity = very_light:
+    Focus on recovery nutrition only.
+    Avoid calorie deficit.
+
+    If Global Intensity = high:
+    Increase protein recommendation.
+    Support recovery meals.
+
     Reinforce identity subtly.
 
     Refine this into:
@@ -128,7 +194,7 @@ Increase protein and hydration.
         memory["nutrition_insights"] = insights
     else:
         
-        messages=[{"role": "system", "content": system_prompt}],
+        messages=[{"role": "system", "content": system_prompt}]
         refined = call_ai(memory, messages)
         if refined:
             memory["nutrition_insights"] = [refined]
