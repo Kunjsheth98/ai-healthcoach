@@ -1,60 +1,60 @@
-import os
 import json
 import streamlit as st
-
-# -----------------------------------------
-# CHAT DIRECTORY
-# -----------------------------------------
-
-
-def get_chat_dir():
-    user = st.session_state.get("user")
-    path = f"users/{user}/chats"
-    os.makedirs(path, exist_ok=True)
-    return path
-
-
-# -----------------------------------------
-# LIST CHATS
-# -----------------------------------------
+from core.database import get_connection
 
 
 def list_chats():
-    chat_dir = get_chat_dir()
-    files = os.listdir(chat_dir)
-    return [
-        f.replace(".json", "")
-        for f in files
-        if f.endswith(".json")
-    ]
+    username = st.session_state.get("user")
+    if not username:
+        return []
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT chat_id FROM chats WHERE username=? ORDER BY rowid DESC",
+        (username,)
+    )
+
+    rows = cursor.fetchall()
+    return [r[0] for r in rows]
 
 
-# -----------------------------------------
-# LOAD CHAT
-# -----------------------------------------
+def load_chat(chat_id):
+    if not chat_id:
+        return []
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT data FROM chats WHERE chat_id=?",
+        (chat_id,)
+    )
+
+    row = cursor.fetchone()
+
+    if row:
+        return json.loads(row[0])
+
+    return []
 
 
-def load_chat(chat_name):
-    path = f"{get_chat_dir()}/{chat_name}.json"
+def save_chat(chat_id, messages):
+    username = st.session_state.get("user")
+    if not username:
+        return
 
-    if os.path.exists(path):
-        try:
-            with open(path, "r") as f:
-                return json.load(f)
-        except Exception:
-            return []
+    conn = get_connection()
+    cursor = conn.cursor()
 
+    data = json.dumps(messages)
 
-# -----------------------------------------
-# SAVE CHAT
-# -----------------------------------------
+    cursor.execute("""
+        INSERT INTO chats (chat_id, username, data)
+        VALUES (?, ?, ?)
+        ON CONFLICT(chat_id)
+        DO UPDATE SET data=excluded.data
+    """, (chat_id, username, data))
 
-def sanitize_chat_name(name):
-    return "".join(c for c in name if c.isalnum() or c in ("_", "-"))
-
-def save_chat(chat_name, messages):
-    safe_name = sanitize_chat_name(chat_name)
-    path = f"{get_chat_dir()}/{safe_name}.json"
-
-    with open(path, "w") as f:
-        json.dump(messages, f, indent=2)
+    conn.commit()

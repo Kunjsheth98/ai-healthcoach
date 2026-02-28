@@ -1,7 +1,8 @@
 import json
 import os
 import streamlit as st
-
+from core.database import get_connection
+from core.memory import save_memory
 # =====================================================
 # DEFAULT MEMORY STRUCTURE (USER AI BRAIN)
 # =====================================================
@@ -94,23 +95,61 @@ DEFAULT_MEMORY = {
     "risk_forecast": {},
 }
 
-
-def get_memory_path():
+def load_memory():
     user = st.session_state.get("user")
     if not user:
-        return "health_memory.json"
-    os.makedirs(f"users/{user}", exist_ok=True)
-    return f"users/{user}/memory.json"
+        return DEFAULT_MEMORY.copy()
 
+    conn = get_connection()
+    cursor = conn.cursor()
 
-def load_memory():
-    memory_file = get_memory_path()
+    cursor.execute("SELECT data FROM memory WHERE username=?", (user,))
+    row = cursor.fetchone()
 
-    if os.path.exists(memory_file):
-        with open(memory_file, "r") as f:
-            memory = json.load(f)
+    if row:
+        memory = json.loads(row[0])
     else:
-        memory = DEFAULT_MEMORY.copy()       
+        memory = DEFAULT_MEMORY.copy()
+
+    # ===== Corruption Guard =====
+    for key, value in DEFAULT_MEMORY.items():
+        if key not in memory:
+            memory[key] = value
+
+    if not isinstance(memory.get("master_decision_log"), list):
+        memory["master_decision_log"] = []
+
+    if not isinstance(memory.get("mental_history"), list):
+        memory["mental_history"] = []
+
+    if not isinstance(memory.get("habit_log"), list):
+        memory["habit_log"] = []
+
+    if not isinstance(memory.get("risk_history"), list):
+        memory["risk_history"] = []
+
+    memory = validate_memory(memory)
+    return memory
+
+
+def save_memory(memory):  
+    user = st.session_state.get("user")
+    if not user:
+        return
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    data = json.dumps(memory)
+
+    cursor.execute("""
+        INSERT INTO memory (username, data)
+        VALUES (?, ?)
+        ON CONFLICT(username)
+        DO UPDATE SET data=excluded.data
+    """, (user, data))
+
+    conn.commit()       
 
     # ================= MEMORY CORRUPTION GUARD =================
 
@@ -140,7 +179,3 @@ def validate_memory(memory):
             memory[key] = value
     return memory
 
-def save_memory(memory):
-    memory_file = get_memory_path()
-    with open(memory_file, "w") as f:
-        json.dump(memory, f, indent=4)
