@@ -51,6 +51,7 @@ from agents.body_composition import calculate_body_fat
 from agents.daily_neural_sync import daily_neural_sync
 from agents.stress_engine import stress_engine
 from agents.system_state_engine import system_state_engine
+from agents.hormonal_intelligence import hormonal_intelligence_core
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
 from admin.control_center import admin_control_center
@@ -218,87 +219,104 @@ with tab_brain:
     # ================= CLEAN STRUCTURED ONBOARDING =================
 
     if not memory.get("onboarding_complete"):
-        st.markdown("""
-        <div style="
-        padding:18px;
-        border-radius:14px;
-        background:#f8fafc;
-        border:1px solid #e5e7eb;
-        margin-bottom:20px;">
-        <h3 style="margin-bottom:6px;">🧠 Initial Health Calibration</h3>
-        <p style="color:#475569;">
-        This helps your AI adapt your sleep, stress, and movement plan intelligently.
-        It takes less than a minute.
-        </p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.subheader("🧬 Let's Build Your Health Profile")
+        if "onboarding_step" not in memory:
+            memory["onboarding_step"] = 1
+        # ===============================
+        # STEP 1 — BASIC INFO
+        # ===============================
 
-        st.markdown("### 👤 Basic Information")
+        if memory["onboarding_step"] == 1:
 
-        full_name = st.text_input("Full Name")
-        age = st.number_input("Age", 10, 100, 25)
-        gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-        height = st.number_input("Height (cm)", 100, 220, 170)
-        weight = st.number_input("Weight (kg)", 30, 200, 70)
+            st.markdown("### 👤 Basic Information")
 
-        diseases = st.multiselect(
-            "Any Known Medical Conditions?",
-            ["Diabetes", "Thyroid", "Hypertension", "PCOS", "Heart Issues", "Asthma"],
-        )
+            full_name = st.text_input("Full Name")
+            age = st.number_input("Age", 10, 100, 25)
+            gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+            goal_type = st.selectbox(
+                "Main health goal",
+                [
+                    "Fat loss",
+                    "Muscle gain",
+                    "Energy boost",
+                    "Stress reduction",
+                    "General fitness",
+                ],
+            )
 
-        medications = st.text_input("Current Medications (optional)")
+            if st.button("Next →"):
 
-        st.markdown("### 🧠 Lifestyle Profile")
+                memory["profile"] = {
+                    "name": full_name,
+                    "age": age,
+                    "gender": gender,
+                }
 
-        discipline = st.slider("How disciplined are you with routines?", 1, 10, 5)
+                memory.setdefault("lifestyle", {})
+                memory["lifestyle"]["goal"] = goal_type
 
-        activity = st.selectbox(
-            "Your activity type",
-            ["Sedentary (desk work)", "Moderately active", "Very active"],
-        )
+                memory["onboarding_step"] = 2
+                save_memory(memory)
+                st.rerun()
 
-        sleep_pattern = st.selectbox(
-            "Your sleep pattern", ["Late sleeper", "Early riser", "Irregular"]
-        )
-        wake_time = st.time_input("Preferred wake-up time (optional)")
 
-        goal_type = st.selectbox(
-            "Main health goal",
-            [
-                "Fat loss",
-                "Muscle gain",
-                "Energy boost",
-                "Stress reduction",
-                "General fitness",
-            ],
-        )
+        # ===============================
+        # STEP 2 — LIFESTYLE + CYCLE
+        # ===============================
 
-        if st.button("Complete Setup"):
+        elif memory["onboarding_step"] == 2:
 
-            memory["profile"] = {
-                "name": full_name,
-                "age": age,
-                "gender": gender,
-                "height_cm": height,
-                "weight_kg": weight,
-                "diseases": diseases,
-                "medications": medications,
-            }
+            st.markdown("### 🧠 Lifestyle Profile")
 
-            memory["lifestyle"] = {
-                "discipline_score": discipline,
-                "activity_type": activity,
-                "sleep_pattern": sleep_pattern,
-                "goal": goal_type,
-                "preferred_wake_time" : str(wake_time) if wake_time else None,
-            }
+            discipline = st.slider("How disciplined are you with routines?", 1, 10, 5)
 
-            memory["onboarding_complete"] = True
+            activity = st.selectbox(
+                "Your activity type",
+                ["Sedentary (desk work)", "Moderately active", "Very active"],
+            )
 
-            st.success("Profile Created Successfully ✅")
-            save_memory(memory)
-            st.rerun()
+            sleep_pattern = st.selectbox(
+                "Your sleep pattern", ["Late sleeper", "Early riser", "Irregular"]
+            )
+
+            wake_time = st.time_input("Preferred wake-up time (optional)")
+
+            gender = memory.get("profile", {}).get("gender")
+
+            cycle_start = None
+            cycle_length = 28
+
+            if gender == "Female":
+                cycle_start = st.date_input("Last Period Start Date")
+                cycle_length = st.slider("Average Cycle Length (days)", 21, 35, 28)
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("← Back"):
+                    memory["onboarding_step"] = 1
+                    save_memory(memory)
+                    st.rerun()
+
+            with col2:
+                if st.button("Complete Setup"):
+
+                    memory["lifestyle"].update({
+                        "discipline_score": discipline,
+                        "activity_type": activity,
+                        "sleep_pattern": sleep_pattern,
+                        "preferred_wake_time": str(wake_time) if wake_time else None,
+                    })
+
+                    if gender == "Female" and cycle_start:
+                        memory["cycle_tracking"] = {
+                            "cycle_start_date": str(cycle_start),
+                            "cycle_length": cycle_length
+                        }
+
+                    memory["onboarding_complete"] = True
+                    memory["onboarding_step"] = 1
+                    save_memory(memory)
+                    st.rerun()
 
         st.stop()
 
@@ -404,6 +422,7 @@ with tab_brain:
 
     stress_engine(memory)
     system_state_engine(memory)
+    hormonal_intelligence_core(memory)
 
     if memory.get("stress_recommendations"):
         st.subheader("🧠 Stress Recovery Suggestions")
@@ -425,6 +444,33 @@ with tab_brain:
 
     else:
         st.info("⚖ Balanced Mode: Maintain steady progress.")    
+
+    phase = memory.get("current_cycle_phase")
+
+    if phase:
+
+        phase_explanations = {
+            "menstrual": "Low energy window. Focus on recovery and gentle movement.",
+            "follicular": "Energy rising. Ideal time to build habits and intensity.",
+            "ovulatory": "Peak performance window. Best for strength and confidence tasks.",
+            "luteal": "Energy stabilizing. Reduce pressure and protect consistency."
+        }
+
+        explanation = phase_explanations.get(phase, "")
+
+        cycle_day = memory.get("cycle_day")
+        next_period = memory.get("next_period_estimate")
+
+        st.markdown("---")
+        st.subheader("🧬 Hormonal Intelligence")
+
+        st.markdown(f"""
+    *Current Phase:* {phase.capitalize()}  
+    *Cycle Day:* {cycle_day}  
+    *Next Period Estimate:* {next_period}
+
+    {explanation}
+    """)
 
     # ---- Companion Guided Intro ----
     if "companion_intro_shown" not in memory:

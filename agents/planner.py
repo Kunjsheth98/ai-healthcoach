@@ -14,6 +14,18 @@ def autonomous_planner_agent(memory):
     mode = brain.get("mode", "wellness")
     intervention = brain.get("intervention", "normal")
     system_state = memory.get("system_state", "balanced")
+    # ===============================
+    # Hormonal Planner Influence
+    # ===============================
+
+    phase = memory.get("current_cycle_phase")
+
+    if phase == "menstrual":
+        memory["cognitive_mode"] = "low_focus"
+        planner_intensity = "very_light"
+
+    elif phase == "luteal":
+        planner_intensity = "moderate"
     planner_intensity = memory.get("global_intensity_level", "moderate")
     muscle_score = memory.get("muscle_gain_score", 0)
     if muscle_score > 15:
@@ -72,6 +84,8 @@ def autonomous_planner_agent(memory):
     }
 
     today_split = weekly_split.get(weekday)    
+
+    
 
     # Cognitive load reduction on leg day
     if today_split == "legs":

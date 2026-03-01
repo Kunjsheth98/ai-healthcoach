@@ -78,6 +78,24 @@ Increase protein and hydration.
 
     insights = []
 
+    # ===============================
+    # Hormonal Phase Nutrition Layer
+    # ===============================
+
+    phase = memory.get("current_cycle_phase")
+
+    if phase == "menstrual":
+        insights.append("🩸 During menstrual phase, prioritize iron-rich foods (spinach, lentils) and hydration.")
+
+    elif phase == "follicular":
+        insights.append("🌱 Follicular phase supports lighter meals and protein building.")
+
+    elif phase == "ovulatory":
+        insights.append("🔥 Ovulatory phase benefits from balanced carbs and strength-support nutrition.")
+
+    elif phase == "luteal":
+        insights.append("🌙 Luteal phase may increase cravings. Focus on stable blood sugar and magnesium-rich foods.")
+
     # -------------------------------------------------
     # PATTERN DETECTION
     # -------------------------------------------------

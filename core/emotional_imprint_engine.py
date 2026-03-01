@@ -85,3 +85,31 @@ def emotional_imprint_engine(memory, user_message):
     memory["attachment_depth"] = "forming"
 
     return imprint
+
+def generate_personal_insight(memory, message):
+    mood = memory.get("daily_mood", 5)
+    energy = memory.get("energy_level", 5)
+    goal = memory.get("lifestyle", {}).get("goal", "")
+    phase = memory.get("current_cycle_phase")
+
+    insight = "Here’s what I’m noticing about you so far:\n\n"
+
+    if mood <= 4:
+        insight += "- You might be carrying emotional fatigue.\n"
+    elif mood >= 8:
+        insight += "- You currently have strong emotional momentum.\n"
+
+    if energy <= 4:
+        insight += "- Your energy reserves seem low.\n"
+    elif energy >= 8:
+        insight += "- Your system has high output capacity right now.\n"
+
+    if goal:
+        insight += f"- Your main goal is {goal.lower()}.\n"
+
+    if phase:
+        insight += f"- You’re currently in {phase} phase, which affects performance and mood.\n"
+
+    insight += "\nLet’s build intelligently from here."
+
+    return insight

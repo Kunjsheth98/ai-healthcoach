@@ -2,7 +2,6 @@ import json
 import os
 import streamlit as st
 from core.database import get_connection
-from core.memory import save_memory
 # =====================================================
 # DEFAULT MEMORY STRUCTURE (USER AI BRAIN)
 # =====================================================

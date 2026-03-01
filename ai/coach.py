@@ -26,7 +26,7 @@ from agents.cooking_intelligence import calculate_indian_meal, log_meal
 
 from agents.mental_engine import process_mental_state, post_response_learning
 from core.subscription import has_premium_access
-from core.emotional_imprint_engine import emotional_imprint_engine
+from core.emotional_imprint_engine import emotional_imprint_engine, generate_personal_insight
 from core.dopamine_engine import dopamine_trigger
 from core.emotional_resonance_engine import update_emotional_resonance
 
@@ -205,6 +205,21 @@ def ask_health_coach(memory, message, chat_history, uploaded_image=None):
     elif personality == "Disciplined":
         tone += ", structured and direct"
 
+    # ===============================
+    # Hormonal Tone Adjustment
+    # ===============================
+
+    phase = memory.get("current_cycle_phase")
+
+    if phase == "menstrual":
+        tone = "gentle, emotionally supportive and recovery-focused"
+
+    elif phase == "luteal":
+        tone = "supportive, structured but pressure-free"
+
+    elif phase == "ovulatory":
+        tone = "confident, motivating and performance-oriented"    
+
 # ---------------- PHASE 2 BEHAVIOR UPDATE ----------------
     update_behavioral_patterns(memory)
     predict_risk(memory)
@@ -364,6 +379,12 @@ After giving advice, explain briefly why this suggestion was made based on user 
     # 🤖 OPENAI CALL
     # -------------------------------------------------
     imprint_message = emotional_imprint_engine(memory, message)
+
+    if imprint_message:
+        insight = generate_personal_insight(memory, message)
+        save_memory(memory)
+        return imprint_message + "\n\n" + insight
+
     if imprint_message:
         save_memory(memory)
         return imprint_message

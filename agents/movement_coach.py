@@ -28,6 +28,18 @@ def choose_movement_type(memory):
         save_memory(memory)
 
     split_type = weekly_split.get(weekday)
+    # ===============================
+    # Hormonal Movement Override
+    # ===============================
+
+    phase = memory.get("current_cycle_phase")
+
+    if phase == "menstrual":
+        return "recovery"
+
+    elif phase == "luteal":
+        if memory.get("energy_level", 5) <= 6:
+            return "light_workout"
     brain = memory.get("brain_state", {})
     meta = memory.get("meta_strategy")
 
