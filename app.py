@@ -386,6 +386,21 @@ with tab_brain:
         * Burnout Risk: {memory.get("burnout_risk_level")}
         """)
 
+    phase = memory.get("current_cycle_phase")
+    mode = memory.get("life_os_mode")
+    burnout = memory.get("burnout_risk_level", 0)
+
+    st.subheader("🎯 Today Your Body Needs")
+
+    if burnout >= 7:
+        st.error("Recovery. Protect your nervous system today.")
+    elif phase == "menstrual":
+        st.info("Gentleness. Lower intensity and hydrate.")
+    elif mode == "performance":
+        st.success("High-focus output. Use your peak window.")
+    else:
+        st.info("Steady consistency. Small wins compound.")    
+
     from datetime import datetime
 
     st.header("🏠 Today")
@@ -549,6 +564,11 @@ with tab_brain:
         f"""
         <div class="hero">
         <h2>👋 Welcome back {st.session_state.user}</h2>
+        st.caption(
+        f"Adaptive Mode: {memory.get('life_os_mode','wellness').upper()} | "
+        f"Burnout Risk: {memory.get('burnout_risk_level',0)} | "
+        f"Phase: {memory.get('current_cycle_phase','N/A')}"
+        )
         <h3>Health Score: {memory.get("health_score",50)}</h3>
         </div>
     """,
