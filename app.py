@@ -966,6 +966,10 @@ with tab_sync:
         max_value=12.0,
         step=0.5
     )
+    fix_sleep = st.checkbox(
+        "I want to gradually fix my sleep routine",
+    value=memory.get("fix_sleep_cycle", False)
+    )
     energy = st.slider(
         "⚡ How energetic do you feel right now?",
         min_value=1,
@@ -1004,6 +1008,7 @@ with tab_sync:
         memory["water_intake"] = water
         memory["last_checkin_date"] = str(today)
         memory["emotion_state"] = emotion
+        memory["fix_sleep_cycle"] = fix_sleep
         st.markdown("---")
 
         nutritionist_brain(memory)
