@@ -119,6 +119,8 @@ if st.session_state.user is None:
 # LOAD MEMORY
 # =====================================================
 memory = load_memory()
+memory.setdefault("engagement_score", 0)
+memory.setdefault("streak_days", 0)
 
 # ================= LIFE OS STRATEGY =================
 
@@ -993,12 +995,36 @@ with tab_sync:
         memory["emotion_state"] = emotion
         st.markdown("---")
 
-    nutritionist_brain(memory)
-    metabolic_predictor(memory)
-    behavior_brain(memory)
-    medicine_reminder_agent(memory)
+        nutritionist_brain(memory)
+        metabolic_predictor(memory)
+        behavior_brain(memory)
+        medicine_reminder_agent(memory)
 
-    st.markdown("---")
+        st.markdown("---")
+
+        # ---- Track Weight History ----
+        current_weight = memory.get("profile", {}).get("weight_kg")
+
+        if current_weight:
+            memory.setdefault("weight_history", [])
+            memory["weight_history"].append({"weight": current_weight})
+            memory["weight_history"] = memory["weight_history"][-30:]
+            memory.setdefault("daily_health_log", [])
+            memory["daily_health_log"].append(
+            {"sleep": sleep_hours, "energy": energy, "water": water, "exercise": exercise}
+            )
+
+        memory["engagement_score"] = memory.get("engagement_score", 0) + 1
+
+        add_xp(memory)
+        update_streak(memory)
+
+        calculate_health_score(memory)
+        daily_neural_sync(memory)
+
+        from agents.habit_reinforcement_engine import neural_habit_engine
+        neural_habit_engine(memory)
+        st.success("Check-in saved!")
 
     st.subheader("📸 Upload Food Image")
     food_image = st.file_uploader("Upload meal photo")
@@ -1009,30 +1035,8 @@ with tab_sync:
         result = analyze_food_image(food_image, memory)
         st.info(result)
 
-
-    # ---- Track Weight History ----
-    current_weight = memory.get("profile", {}).get("weight_kg")
-
-    if current_weight:
-        memory.setdefault("weight_history", [])
-        memory["weight_history"].append({"weight": current_weight})
-        memory["weight_history"] = memory["weight_history"][-30:]
-        memory.setdefault("daily_health_log", [])
-        memory["daily_health_log"].append(
-        {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
-        )
-
-    memory["engagement_score"] = memory.get("engagement_score", 0) + 1
-
-    add_xp(memory)
-    update_streak(memory)
-    if memory["engagement_score"] % 5 == 0:
+    if memory.get("engagement_score", 0) > 0 and memory.get("engagement_score", 0) % 5 == 0:
         st.success("🔥 Amazing consistency! Your future self is proud of you.")
-    calculate_health_score(memory)
-    daily_neural_sync(memory)
-    from agents.habit_reinforcement_engine import neural_habit_engine
-    neural_habit_engine(memory)
-    st.success("Check-in saved!")
 
     if memory.get("streak_days", 0) >= 1:
         st.success("🔥 Another brick added to your future self.")
