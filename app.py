@@ -96,8 +96,9 @@ if st.session_state.user is None:
 
         if st.button("Login"):
             if login_user(username, password):
-                st.session_state.user = username
+                st.session_state.user = username    
                 st.session_state.plan = "free"
+                st.session_state["remembered_user"] = username    
                 st.rerun()
             else:
                 st.error("Invalid username or password")
@@ -121,6 +122,16 @@ if st.session_state.user is None:
 memory = load_memory()
 memory.setdefault("engagement_score", 0)
 memory.setdefault("streak_days", 0)
+
+
+# ---- Persistent Login Restore ----
+if "user" not in st.session_state:
+    st.session_state["user"] = None
+
+if st.session_state["user"] is None:
+    remembered_user = st.session_state.get("remembered_user")
+    if remembered_user:
+        st.session_state["user"] = remembered_user
 
 # ================= LIFE OS STRATEGY =================
 

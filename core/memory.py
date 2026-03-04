@@ -131,7 +131,8 @@ def load_memory():
     return memory
 
 
-def save_memory(memory):  
+def save_memory(memory):
+
     user = st.session_state.get("user")
     if not user:
         return
@@ -139,7 +140,19 @@ def save_memory(memory):
     conn = get_connection()
     cursor = conn.cursor()
 
-    data = json.dumps(memory)
+    # ---- Load latest memory from DB ----
+    cursor.execute("SELECT data FROM memory WHERE username=?", (user,))
+    row = cursor.fetchone()
+
+    if row:
+        latest_memory = json.loads(row[0])
+    else:
+        latest_memory = {}
+
+    # ---- Merge updates instead of overwrite ----
+    latest_memory.update(memory)
+
+    data = json.dumps(latest_memory)
 
     cursor.execute("""
         INSERT INTO memory (username, data)

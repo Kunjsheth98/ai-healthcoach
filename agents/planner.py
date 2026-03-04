@@ -20,13 +20,15 @@ def autonomous_planner_agent(memory):
 
     phase = memory.get("current_cycle_phase")
 
+    planner_intensity = memory.get("global_intensity_level", "moderate")
+
     if phase == "menstrual":
         memory["cognitive_mode"] = "low_focus"
         planner_intensity = "very_light"
 
     elif phase == "luteal":
         planner_intensity = "moderate"
-    planner_intensity = memory.get("global_intensity_level", "moderate")
+
     muscle_score = memory.get("muscle_gain_score", 0)
     if muscle_score > 15:
         planner_intensity = "high"
@@ -197,6 +199,7 @@ def autonomous_planner_agent(memory):
     Realism Constraints: {realism_rules}
     Wake Anchor:
     {wake_anchor_rule}
+    User Preferred Wake Time: {preferred_wake}
     Instructions:
     If Planner Intensity Level = very_light:
     Create recovery focused day.
@@ -235,6 +238,10 @@ def autonomous_planner_agent(memory):
 
     If Life Mode = wellness:
     Balanced day.
+
+    Wake Time Rule:
+    If User Preferred Wake Time exists, the morning schedule MUST start around that time.
+    Do NOT invent earlier wake times.
 
     Structure output STRICTLY as:
 
