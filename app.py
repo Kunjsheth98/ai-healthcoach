@@ -946,7 +946,7 @@ with tab_sync:
 
     if last_checkin == str(today):
         st.warning("✅ You've already completed today's check-in.")
-        st.stop()
+    
     sleep_hours = st.number_input(
         "🛌 How many hours did you sleep last night?",
         min_value=0.0,
@@ -1010,35 +1010,35 @@ with tab_sync:
         st.info(result)
 
 
-        # ---- Track Weight History ----
-        current_weight = memory.get("profile", {}).get("weight_kg")
+    # ---- Track Weight History ----
+    current_weight = memory.get("profile", {}).get("weight_kg")
 
-        if current_weight:
-            memory.setdefault("weight_history", [])
-            memory["weight_history"].append({"weight": current_weight})
-            memory["weight_history"] = memory["weight_history"][-30:]
-            memory.setdefault("daily_health_log", [])
-            memory["daily_health_log"].append(
-            {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
-            )
+    if current_weight:
+        memory.setdefault("weight_history", [])
+        memory["weight_history"].append({"weight": current_weight})
+        memory["weight_history"] = memory["weight_history"][-30:]
+        memory.setdefault("daily_health_log", [])
+        memory["daily_health_log"].append(
+        {"sleep": sleep, "energy": energy, "water": water, "exercise": exercise}
+        )
 
-        memory["engagement_score"] = memory.get("engagement_score", 0) + 1
+    memory["engagement_score"] = memory.get("engagement_score", 0) + 1
 
-        add_xp(memory)
-        update_streak(memory)
-        if memory["engagement_score"] % 5 == 0:
-            st.success("🔥 Amazing consistency! Your future self is proud of you.")
-        calculate_health_score(memory)
-        daily_neural_sync(memory)
-        from agents.habit_reinforcement_engine import neural_habit_engine
-        neural_habit_engine(memory)
-        st.success("Check-in saved!")
+    add_xp(memory)
+    update_streak(memory)
+    if memory["engagement_score"] % 5 == 0:
+        st.success("🔥 Amazing consistency! Your future self is proud of you.")
+    calculate_health_score(memory)
+    daily_neural_sync(memory)
+    from agents.habit_reinforcement_engine import neural_habit_engine
+    neural_habit_engine(memory)
+    st.success("Check-in saved!")
 
-        if memory.get("streak_days", 0) >= 1:
-            st.success("🔥 Another brick added to your future self.")
+    if memory.get("streak_days", 0) >= 1:
+        st.success("🔥 Another brick added to your future self.")
 
-        if memory.get("streak_days", 0) % 5 == 0 and memory.get("streak_days", 0) > 0:
-            st.success("🏆 Milestone reached. Identity strengthening.")  
+    if memory.get("streak_days", 0) % 5 == 0 and memory.get("streak_days", 0) > 0:
+        st.success("🏆 Milestone reached. Identity strengthening.")  
 
 
 # =====================================================
