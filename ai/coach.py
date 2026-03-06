@@ -1,8 +1,6 @@
 # =====================================================
 # AI HEALTH COACH (SAFE + PRODUCTION VERSION)
 # =====================================================
-
-from core.config import client
 from core.ai_wrapper import call_ai
 from core.memory import save_memory
 
