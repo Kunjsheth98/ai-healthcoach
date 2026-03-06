@@ -503,11 +503,13 @@ with tab_home:
     else:
         st.info("Steady consistency. Small wins compound.")    
 
-    from datetime import datetime
-
     st.header("🏠 Today")
 
-    current_hour = datetime.now().hour
+    from datetime import datetime
+    import pytz
+
+    ist = pytz.timezone("Asia/Kolkata")
+    current_hour = datetime.now(ist).hour
 
     if current_hour < 12:
         greeting = "Good morning"
@@ -757,6 +759,7 @@ with tab_home:
         st.metric("Burnout Forecast", f"{int(forecast.get('burnout_probability',0)*100)}%")
         st.caption(f"Trigger: {forecast.get('primary_trigger','Stable')}") 
 
+    st.markdown("---")
     # ===============================
     # 📈 Body Fat Trend Chart
     # ===============================
@@ -764,22 +767,23 @@ with tab_home:
     bf_history = memory.get("body_fat_history", [])
 
     if len(bf_history) >= 2:
-        st.subheader("📈 Body Fat Trend")
+        with st.expander(" 📈 Health Trends"):
+            st.subheader("📈 Body Fat Trend")
 
-        import pandas as pd
-        from datetime import datetime, timedelta
+            import pandas as pd
+            from datetime import datetime, timedelta
 
-        dates = [
-            datetime.now().date() - timedelta(days=len(bf_history)-i-1)
-            for i in range(len(bf_history))
-        ]
+            dates = [
+                datetime.now().date() - timedelta(days=len(bf_history)-i-1)
+                for i in range(len(bf_history))
+            ]
 
-        df = pd.DataFrame({
-            "Date": dates,
-            "Body Fat %": bf_history
-        })
+            df = pd.DataFrame({
+                "Date": dates,
+                "Body Fat %": bf_history
+            })
 
-        st.line_chart(df.set_index("Date"))  
+            st.line_chart(df.set_index("Date"))  
 
 
     r1, r2, r3 = st.columns(3)
@@ -799,9 +803,6 @@ with tab_home:
 
     # ---------------- FIRST DAY HOOK ENGINE ----------------
 
-    classify_health_identity(memory)
-    generate_pattern_reflection(memory)
-    generate_future_projection(memory)
     if False:
         st.subheader("🔮 Your Health Intelligence")
 
@@ -816,16 +817,8 @@ with tab_home:
 
     if False:
         st.subheader("🧬 Your Health Identity")
-    st.success(memory.get("health_identity", ""))
+        st.success(memory.get("health_identity", ""))
 
-    if memory.get("pattern_insights"):
-        st.subheader("🧠 What Your Health Pattern Shows")
-        for insight in memory.get("pattern_insights", []):
-            st.info(insight)
-
-    if memory.get("future_projection"):
-        st.subheader("🔮 Health Outlook")
-        st.warning(memory["future_projection"])
 
     if False and memory.get("nutrition_insights"):
         st.subheader("🧠 AI Nutritionist Insights")
@@ -847,8 +840,6 @@ with tab_home:
 
     cost = memory.get("budget", {}).get("daily_cost", 0)
     st.metric("USD Spent Today", round(cost, 3))
-
-    st.markdown("---")
 
     emotional_reward_engine(memory)
 
@@ -947,9 +938,6 @@ with tab_sync:
 
     render_strategy_banner(memory)
 
-    st.markdown("---")
-
-
     st.header("📥 Daily Check-in")
     st.info("This helps Asha understand your sleep, energy and mood so she can adapt your plan.")
 
@@ -1026,6 +1014,7 @@ with tab_sync:
         generate_future_projection(memory)
 
         health_master_brain(memory)
+        autonomous_planner_agent(memory)
 
         st.markdown("---")
 
@@ -1075,39 +1064,10 @@ with tab_coach:
 
     render_strategy_banner(memory)
 
-    st.markdown("---")
-
-
     st.header("💬 Talk to Coach")
     st.caption("Your AI health companion. Ask about sleep, diet, workouts, stress or habits.")
-
-    st.markdown("---")
-
-    st.subheader("📸 Meal Analysis")
-    st.caption("Send a meal photo and Coach will estimate calories and nutrition.")
-
-    food_image = st.file_uploader("Upload meal photo", key="coach_food")
-
-    if food_image:
-        from agents.food_vision_engine import analyze_food_image
-        result = analyze_food_image(food_image, memory)
-        st.info(result)
-
-    st.subheader("🪞 Future Self Insight")
-
-    streak = memory.get("streak_days", 0)
-
-    if streak >= 7:
-        st.success("Your future self is proud of this version of you.")
-    elif streak >= 3:
-        st.info("You’re building consistency. Protect it.")
-    else:
-        st.warning("Your future self needs action today.")
-
-    st.subheader("🧑‍⚕️ Your AI Coach")
-
-    st.caption("Use Coach to ask about sleep, stress, diet, workouts, or emotional clarity.")
     st.caption("Coach adapts based on your Daily Sync and lifestyle profile.")
+
     # ---- Guided Entry Prompts ----
     if "coach_prompt_shown" not in memory:
 
@@ -1128,6 +1088,8 @@ with tab_coach:
             memory["coach_auto_message"] = suggestion
             memory["coach_prompt_shown"] = True
     reply = ""
+
+    st.markdown("---")
 
     chats = list_chats()
 
@@ -1206,13 +1168,36 @@ with tab_coach:
         if "last_reply" in st.session_state:
             speak_text(st.session_state.last_reply, language)
 
+    # ===============================
+    # FOOD IMAGE ANALYSIS
+    # ===============================        
+
+    st.subheader("📸 Meal Analysis")
+    st.caption("Send a meal photo and Coach will estimate calories and nutrition.")
+
+    food_image = st.file_uploader("Upload meal photo", key="coach_food")
+
+    if food_image:
+        from agents.food_vision_engine import analyze_food_image
+        result = analyze_food_image(food_image, memory)
+        st.info(result)        
+
+# ---------------- FUTURE SELF INSIGHT ----------------
+    st.subheader("🪞 Future Self Insight")
+
+    streak = memory.get("streak_days", 0)
+
+    if streak >= 7:
+        st.success("Your future self is proud of this version of you.")
+    elif streak >= 3:
+        st.info("You’re building consistency. Protect it.")
+    else:
+        st.warning("Your future self needs action today.")        
+
 
 with tab_trends:
 
     render_strategy_banner(memory)
-
-    st.markdown("---")
-
 
     # ---------------- MENTAL SCORE GRAPH ----------------
     if has_premium_access("mental_engine"):
@@ -1329,8 +1314,6 @@ with tab_brain:
         st.subheader("🔮 Future Health Projection")
         st.warning(memory.get("future_projection"))
 
-    st.markdown("---")
-
     # Nutrition insights
     if memory.get("nutrition_insights"):
         st.subheader("🥗 Nutrition Intelligence")
@@ -1361,9 +1344,6 @@ with tab_planner:
 
     render_strategy_banner(memory)
 
-    st.markdown("---")
-
-
     st.subheader("🏆 Growth Status")
 
     streak = memory.get("streak_days", 0)
@@ -1382,12 +1362,18 @@ with tab_planner:
     st.success(f"Current Rank: {rank}")
 
     gamification_ui(memory)
-    autonomous_planner_agent(memory)
+    st.info("Your system generated tomorrow’s adaptive plan based on today's health signals.")
     if memory.get("structured_plan"):
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
         st.subheader(f"📅 Tomorrow Plan — {tomorrow}")
-        st.markdown(memory["structured_plan"])
-        st.caption("This plan adapts to your sleep, stress, burnout risk, and identity stage.")
+        tasks = memory["structured_plan"].split("\n")
+        cols = st.columns(2)
+        for i, task in enumerate(tasks):
+            with cols[i % 2]:
+                st.container(border=True)  
+                st.markdown(f"### {task}")
+                st.progress(0)
+                st.caption("Planned action")          
 
     if has_premium_access("adaptive_planner"):
         adaptive_life_planner(memory)
@@ -1403,8 +1389,6 @@ with tab_planner:
 
 with tab_vault:
     render_strategy_banner(memory)
-
-    st.markdown("---")
 
     health_record_vault()
     st.markdown("---")
