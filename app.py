@@ -1363,34 +1363,11 @@ with tab_planner:
 
     gamification_ui(memory)
     
-
-    plan = memory.get("structured_plan")
-    if plan:
+    if memory.get("structured_plan"):
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
-        st.subheader(f"📅 Tomorrow Plan — {tomorrow}")
-        st.info("Your system generated tomorrow’s adaptive plan based on today's health signals.")
-        tasks = [t.strip() for t in plan.split("\n") if t.strip()]
-
-        morning = tasks[:2]
-        afternoon = tasks[2:4]
-        evening = tasks[4:]
-
-        if morning:
-            st.markdown("### 🌅 Morning")
-            for t in morning:
-                st.success(t)
-
-        if afternoon:
-            st.markdown("### ☀️ Midday")
-            for t in afternoon:
-                st.info(t)
-
-        if evening:
-            st.markdown("### 🌙 Evening")
-            for t in evening:
-                st.warning(t)
-
-        st.caption("This plan adapts to your sleep, stress, burnout risk, and identity stage.")        
+        st.subheader(f"📋 Tomorrow Plan – {tomorrow}")
+        st.markdown(memory["structured_plan"])
+        st.caption("This plan adapts to your sleep, stress, burnout risk, and identity stage.")      
 
     if has_premium_access("adaptive_planner"):
         adaptive_life_planner(memory)
