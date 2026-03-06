@@ -1362,6 +1362,7 @@ with tab_planner:
     st.success(f"Current Rank: {rank}")
 
     gamification_ui(memory)
+    
     if memory.get("structured_plan"):
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
         st.subheader(f"📅 Tomorrow Plan — {tomorrow}")
@@ -1369,10 +1370,12 @@ with tab_planner:
         tasks = memory["structured_plan"].split("\n")
         cols = st.columns(2)
         for i, task in enumerate(tasks):
-            with cols[i % 2]:
-                st.container(border=True)  
-                st.markdown(f"### {task}")
-                st.progress(0)        
+            if task.strip():
+                with cols[i % 2]:
+                    st.container(border=True)  
+                    st.markdown(f"### {task}")
+                    st.progress(0)
+                    st.caption("Planned action")          
 
     if has_premium_access("adaptive_planner"):
         adaptive_life_planner(memory)
