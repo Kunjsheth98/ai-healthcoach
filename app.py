@@ -994,7 +994,7 @@ with tab_sync:
         memory["last_checkin_date"] = str(today)
         memory["emotion_state"] = emotion
         memory["fix_sleep_cycle"] = fix_sleep
-        save_memory(memory)
+
         st.markdown("---")
 
         nutritionist_brain(memory)
@@ -1011,6 +1011,7 @@ with tab_sync:
         generate_future_projection(memory)
 
         health_master_brain(memory)
+        save_memory(memory)
 
         st.markdown("---")
 
