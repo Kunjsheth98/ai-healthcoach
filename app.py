@@ -59,7 +59,6 @@ from admin.control_center import admin_control_center
 
 # ================= AI =================
 from ai.coach import ask_health_coach
-
 # ================= DASHBOARD =================
 from dashboard.charts import show_health_chart
 
@@ -1012,7 +1011,6 @@ with tab_sync:
         generate_future_projection(memory)
 
         health_master_brain(memory)
-        autonomous_planner_agent(memory)
 
         st.markdown("---")
 
@@ -1359,7 +1357,7 @@ with tab_planner:
     st.success(f"Current Rank: {rank}")
 
     gamification_ui(memory)
-    
+    autonomous_planner_agent(memory)
     if memory.get("structured_plan"):
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%A")
         st.subheader(f"📋 Tomorrow Plan – {tomorrow}")
