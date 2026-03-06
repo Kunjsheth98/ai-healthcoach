@@ -149,9 +149,21 @@ def save_memory(memory):
     else:
         latest_memory = {}
 
-    # ---- Merge updates instead of overwrite ----
-    latest_memory.update(memory)
+    # ---- Safe merge updates ----
+    for key, value in memory.items():
 
+        # Preserve existing lists if both are lists
+        if isinstance(value, list) and isinstance(latest_memory.get(key), list):
+            latest_memory[key] = latest_memory[key] + value
+
+        else:
+            latest_memory[key] = value
+        # ================= MEMORY CORRUPTION GUARD =================
+
+    for key, value in DEFAULT_MEMORY.items():
+        if key not in memory:
+            memory[key] = value
+            
     data = json.dumps(latest_memory)
 
     cursor.execute("""
@@ -162,12 +174,6 @@ def save_memory(memory):
     """, (user, data))
 
     conn.commit()       
-
-    # ================= MEMORY CORRUPTION GUARD =================
-
-    for key, value in DEFAULT_MEMORY.items():
-        if key not in memory:
-            memory[key] = value
 
     # Ensure critical lists are lists
     if not isinstance(memory.get("master_decision_log"), list):

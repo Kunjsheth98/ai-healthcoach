@@ -1,10 +1,15 @@
 import hashlib
 from core.database import get_connection
 
+
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+
 def register_user(username, password):
+
+    username = username.strip()
+
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -16,10 +21,15 @@ def register_user(username, password):
         "INSERT INTO users (username, password) VALUES (?, ?)",
         (username, hash_password(password))
     )
+
     conn.commit()
     return True, "Registration successful!"
 
+
 def login_user(username, password):
+
+    username = username.strip()
+
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -27,8 +37,10 @@ def login_user(username, password):
         "SELECT password FROM users WHERE username=?",
         (username,)
     )
+
     row = cursor.fetchone()
 
     if row and row[0] == hash_password(password):
         return True
+
     return False

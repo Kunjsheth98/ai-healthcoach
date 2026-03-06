@@ -388,7 +388,20 @@ After giving advice, explain briefly why this suggestion was made based on user 
     if imprint_message:
         save_memory(memory)
         return imprint_message
-    
+
+    context = f"""
+    User Health Score: {memory.get('health_score')}
+    Energy Level: {memory.get('energy_level')}
+    Burnout Risk: {memory.get('burnout_risk_level')}
+    Current Phase: {memory.get('current_cycle_phase')}
+    Primary Intent: {memory.get('primary_intent')}
+    """
+
+    messages.insert(0, {
+        "role": "system",
+        "content": context
+    })
+
     reply = call_ai(memory, messages)
 
     # 🔥 Dopamine Reinforcement Layer

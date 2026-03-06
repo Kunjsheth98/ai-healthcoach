@@ -1,5 +1,5 @@
 import streamlit as st
-
+import copy
 # ================= AUTH =================
 from core.auth import register_user, login_user
 from datetime import timedelta, datetime
@@ -52,6 +52,9 @@ from agents.daily_neural_sync import daily_neural_sync
 from agents.stress_engine import stress_engine
 from agents.system_state_engine import system_state_engine
 from agents.hormonal_intelligence import hormonal_intelligence_core
+
+from agents.life_os_orchestrator import life_os_orchestrator
+from agents.decision_engine import life_decision_engine
 # ================= ADMIN =================
 from admin.admin_dashboard import admin_dashboard
 from admin.control_center import admin_control_center
@@ -69,12 +72,25 @@ st.set_page_config(page_title="AI HealthCoach", page_icon="🩺", layout="wide")
 st.markdown("""
 <style>
 .block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    padding-top: 1.5rem;
+    padding-bottom: 1rem;
+    max-width: 1200px;
 }
-h2, h3 {
-    margin-top: 0.8rem;
+
+h1,h2,h3 {
+    font-weight:600;
 }
+
+div[data-testid="metric-container"] {
+    background:#0f172a;
+    border-radius:12px;
+    padding:10px;
+}
+
+.stButton button {
+    border-radius:10px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -82,9 +98,9 @@ h2, h3 {
 # LOGIN SYSTEM
 # =====================================================
 if "user" not in st.session_state:
-    st.session_state.user = None
+    st.session_state["user"] = None
 
-if st.session_state.user is None:
+if not st.session_state["user"]:
 
     st.title("🔐 AI HealthCoach Login")
 
@@ -98,7 +114,7 @@ if st.session_state.user is None:
             if login_user(username, password):
                 st.session_state.user = username    
                 st.session_state.plan = "free"
-                st.session_state["remembered_user"] = username    
+                st.session_state["active_tab"] = "coach"  
                 st.rerun()
             else:
                 st.error("Invalid username or password")
@@ -109,8 +125,17 @@ if st.session_state.user is None:
 
         if st.button("Register"):
             success, msg = register_user(new_user, new_pass)
+
             if success:
                 st.success(msg)
+
+                # AUTO LOGIN
+                st.session_state.user = new_user
+                st.session_state.plan = "free"
+                st.session_state["active_tab"] = "coach"
+
+                st.rerun()
+
             else:
                 st.error(msg)
 
@@ -122,16 +147,6 @@ if st.session_state.user is None:
 memory = load_memory()
 memory.setdefault("engagement_score", 0)
 memory.setdefault("streak_days", 0)
-
-
-# ---- Persistent Login Restore ----
-if "user" not in st.session_state:
-    st.session_state["user"] = None
-
-if st.session_state["user"] is None:
-    remembered_user = st.session_state.get("remembered_user")
-    if remembered_user:
-        st.session_state["user"] = remembered_user
 
 # ================= LIFE OS STRATEGY =================
 
@@ -158,6 +173,86 @@ def generate_daily_strategy(memory):
         return "Strengthen Stability"
 
     return "Maintain Balance"
+
+def get_strategy_color(system_state, mode):
+
+    if system_state == "overloaded":
+        return "#dc2626"
+
+    if system_state == "recovery":
+        return "#f59e0b"
+
+    if mode == "performance":
+        return "#2563eb"
+
+    if mode == "discipline":
+        return "#7c3aed"
+
+    if mode == "resilience":
+        return "#0ea5e9"
+
+    return "#16a34a"
+
+def render_strategy_banner(memory):
+
+    strategy = generate_daily_strategy(memory)
+    mode = memory.get("life_os_mode", "wellness")
+    system_state = memory.get("system_state", "balanced")
+
+    color = get_strategy_color(system_state, mode)
+
+    st.markdown(
+        f"""
+        <div style="
+            padding:14px;
+            border-radius:12px;
+            background: linear-gradient(135deg,{color},#111827);
+            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
+            font-weight:600;
+            margin-bottom:15px;">
+            🎯 Today's Strategy: {strategy}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("---")
+
+def get_system_context(memory):
+
+    return {
+        "mode": memory.get("life_os_mode", "wellness"),
+        "burnout": memory.get("burnout_risk_level", 0),
+        "system_state": memory.get("system_state", "balanced"),
+        "phase": memory.get("current_cycle_phase"),
+        "cycle_day": memory.get("cycle_day"),
+        "next_period": memory.get("next_period_estimate"),
+        "strategic_focus": memory.get("strategic_focus", "consistency"),
+        "global_intensity": memory.get("global_intensity_level"),
+        "identity_maturity": memory.get("identity_maturity"),
+    }    
+
+def progress_ring(value, max_value, label):
+            percent = min(value / max_value, 1)
+            angle = percent * 360
+
+            st.markdown(
+                f"""
+            <div style="
+                width:120px;height:120px;border-radius:50%;
+                background:conic-gradient(#22c55e {angle}deg,#1f2937 {angle}deg);
+                display:flex;align-items:center;justify-content:center;margin:auto;">
+            <div style="
+                width:85px;height:85px;background:#0b0f19;
+                border-radius:50%;display:flex;
+                align-items:center;justify-content:center;color:white;">
+                {int(percent*100)}%
+            </div>
+            </div>
+            <p style="text-align:center">{label}</p>
+        """,
+                unsafe_allow_html=True,
+            )    
 
 st.title("🩺 Adaptive AI Health Coach")
 st.caption("Sleep. Stress. Strength. Consistency.")
@@ -201,25 +296,32 @@ chat_history = load_chat(st.session_state.current_chat)
 ADMIN_USERS = ["demo"]
 
 tabs = [
-    "🧠 Brain",
-    "📥 Daily Sync",
+    "🏠 Home",
     "🗣 Coach",
-    "📅 Planner",
-    "📊 Trends",
+    "📥 Check-in",
+    "📅 Plan",
+    "📊 Progress",
+    "🧠 Advanced Insights",
     "🗂 Vault",
 ]
 
 if st.session_state.user in ADMIN_USERS:
     tabs.append("🛠️ Admin")
 
+default_tab = 0
+
+if st.session_state.get("active_tab") == "coach":
+    default_tab = 1
+
 all_tabs = st.tabs(tabs)
 
-tab_brain = all_tabs[0]
-tab_sync = all_tabs[1]
-tab_coach = all_tabs[2]
+tab_home = all_tabs[0]
+tab_coach = all_tabs[1]
+tab_sync = all_tabs[2]
 tab_planner = all_tabs[3]
 tab_trends = all_tabs[4]
-tab_vault = all_tabs[5]
+tab_brain = all_tabs[5]
+tab_vault = all_tabs[6]
 
 if st.session_state.user in ADMIN_USERS:
     tab_admin = all_tabs[6]
@@ -227,8 +329,8 @@ if st.session_state.user in ADMIN_USERS:
 # =====================================================
 # DASHBOARD
 # =====================================================
-with tab_brain:
-
+with tab_home:
+    ctx = get_system_context(memory)
     # ================= CLEAN STRUCTURED ONBOARDING =================
 
     if not memory.get("onboarding_complete"):
@@ -333,7 +435,9 @@ with tab_brain:
 
         st.stop()
 
-
+    # ===============================
+    # FIRST VISIT INTRO
+    # ===============================
 
     if memory.get("first_visit_done") != True:
         st.markdown("""
@@ -355,53 +459,38 @@ with tab_brain:
             save_memory(memory)
             st.rerun()
 
-    strategy = generate_daily_strategy(memory)
-    mode = memory.get("life_os_mode", "wellness")
-    burnout = memory.get("burnout_risk_level", 0)
-    system_state = memory.get("system_state", "balanced")
+    # ===============================
+    # STRATEGY BANNER
+    # ===============================      
 
-    color = "#16a34a"  # default green
+    render_strategy_banner(memory)
 
-    if system_state == "overloaded":
-        color = "#dc2626"
-    elif system_state == "recovery":
-        color = "#f59e0b"
-    elif mode == "performance":
-        color = "#2563eb"
-    elif mode == "discipline":
-        color = "#7c3aed"
-    elif mode == "resilience":
-        color = "#0ea5e9"
+    # ===============================
+    # SYSTEM MODE
+    # ===============================
 
-    st.markdown(
-        f"""
-        <div style="
-            padding:14px;
-            border-radius:12px;
-            background: linear-gradient(135deg,{color},#111827);
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
-            font-weight:600;
-            margin-bottom:15px;">
-            🎯 Today’s Strategy: {strategy}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    focus_mode = ctx["strategic_focus"]
 
-    st.markdown("---")
+    if focus_mode == "recovery":
+        st.warning("🧘 Recovery Mode — focus on sleep, hydration, and low stress today.")
 
+    elif focus_mode == "performance":
+        st.success("🚀 Performance Window — your body is ready for higher output.")
+
+    else:
+        st.info("⚖️ Consistency Mode — small healthy actions matter today.")
 
     st.markdown(f"""
         ### 🧠 Current System State
-        * Strategic Focus: {memory.get("strategic_focus")}
-        * Global Intensity: {memory.get("global_intensity_level")}
-        * Identity Maturity: {memory.get("identity_maturity")}
-        * Burnout Risk: {memory.get("burnout_risk_level")}
+        * Strategic Focus: {ctx["strategic_focus"]}
+        * Global Intensity: {ctx["global_intensity"]}
+        * Identity Maturity: {ctx["identity_maturity"]}
+        * Burnout Risk: {ctx["burnout"]}
         """)
 
-    phase = memory.get("current_cycle_phase")
-    mode = memory.get("life_os_mode")
-    burnout = memory.get("burnout_risk_level", 0)
+    phase = ctx["phase"]
+    mode = ctx["mode"]
+    burnout = ctx["burnout"]
 
     st.subheader("🎯 Today Your Body Needs")
 
@@ -441,21 +530,21 @@ with tab_brain:
 
         if col1.button("😴 Fix Sleep"):
             memory["primary_intent"] = "sleep"
+            save_memory(memory)
 
         if col2.button("🧘 Reduce Stress"):
             memory["primary_intent"] = "stress"
+            save_memory(memory)
 
         if col3.button("🏋️ Start Movement"):
             memory["primary_intent"] = "movement"
+            save_memory(memory)
 
-    stress_engine(memory)
-    system_state_engine(memory)
-    hormonal_intelligence_core(memory)
 
     if memory.get("stress_recommendations"):
         st.subheader("🧠 Stress Recovery Suggestions")
-    for r in memory.get("stress_recommendations", []):
-        st.info(r)
+        for r in memory.get("stress_recommendations", []):
+            st.info(r)
 
     st.subheader("🧭 System Mode")
 
@@ -473,7 +562,7 @@ with tab_brain:
     else:
         st.info("⚖ Balanced Mode: Maintain steady progress.")    
 
-    phase = memory.get("current_cycle_phase")
+    phase = ctx["phase"]
 
     if phase:
 
@@ -486,11 +575,12 @@ with tab_brain:
 
         explanation = phase_explanations.get(phase, "")
 
-        cycle_day = memory.get("cycle_day")
-        next_period = memory.get("next_period_estimate")
+        cycle_day = ctx["cycle_day"]
+        next_period = ctx["next_period"]
 
         st.markdown("---")
-        st.subheader("🧬 Hormonal Intelligence")
+        if False:
+            st.subheader("🧬 Hormonal Intelligence")
 
         st.markdown(f"""
     *Current Phase:* {phase.capitalize()}  
@@ -519,29 +609,7 @@ with tab_brain:
         if st.button("Got it"):
             memory["companion_intro_shown"] = True 
             save_memory (memory)
-
-    # ===== LIFE OS COLOR STATE =====
-    mode = memory.get("life_os_mode", "wellness")
-    burnout = memory.get("burnout_risk_level", 0)
-
-    color = "#16a34a"  # green default
-
-    if burnout >= 70:
-        color = "#dc2626"  # red
-    elif burnout >= 40:
-        color = "#f59e0b"  # orange
-    elif mode == "performance":
-        color = "#2563eb"
-    elif mode == "discipline":
-        color = "#7c3aed"
-    elif mode == "resilience":
-        color = "#0ea5e9"
-
     
-    st.subheader("🧠 System Mode")
-    st.info(f"Mode: {mode.upper()} | Burnout Risk: {burnout}")
-    
-
     calculate_body_fat(memory)
     if memory.get("body_fat_percentage"):
         st.metric("🧬 Body Fat %", memory["body_fat_percentage"])
@@ -577,18 +645,19 @@ with tab_brain:
         f"""
         <div class="hero">
         <h2>👋 Welcome back {st.session_state.user}</h2>
-        st.caption(
+        <h3>Health Score: {memory.get("health_score",50)}</h3>
+            </div>
+        """,
+            unsafe_allow_html=True,
+    )        
+    st.caption(
         f"Adaptive Mode: {memory.get('life_os_mode','wellness').upper()} | "
         f"Burnout Risk: {memory.get('burnout_risk_level',0)} | "
         f"Phase: {memory.get('current_cycle_phase','N/A')}"
         )
-        <h3>Health Score: {memory.get("health_score",50)}</h3>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
+        
 
-    if memory.get("burnout_risk_level", 0) >= 7:
+    if ctx["burnout"] >= 7:
         st.error("🚨 Neural Burnout Engine Warning: Immediate recovery needed.")
     elif memory.get("burnout_risk_level", 0) >= 4:
         st.warning("⚠ Neural Burnout Rising. Adjust workload.")
@@ -607,6 +676,7 @@ with tab_brain:
     if st.button("Save Number"):
         memory["phone_number"] = phone
         st.success("Number saved!")
+        save_memory(memory)
 
     st.markdown("---")
     st.subheader("Today's Overview")
@@ -631,7 +701,6 @@ with tab_brain:
         st.subheader("🧠 Your Evolving Identity")
         st.success(identity)
 
-    memory.setdefault("daily_food_log", [])
     food_calories_today = sum(
         (entry.get("calories") or 0) for entry in memory["daily_food_log"]
     )
@@ -710,51 +779,14 @@ with tab_brain:
             "Body Fat %": bf_history
         })
 
-        st.line_chart(df.set_index("Date"))
+        st.line_chart(df.set_index("Date"))  
 
-    import pandas as pd
-    from datetime import datetime, timedelta
-
-    dates = [
-        datetime.now().date() - timedelta(days=len(bf_history)-i-1)
-        for i in range(len(bf_history))
-    ]
-
-    df = pd.DataFrame({
-        "Date": dates,
-        "Body Fat %": bf_history
-    })
-
-    st.line_chart(df.set_index("Date"))  
-
-    def progress_ring(value, max_value, label):
-            percent = min(value / max_value, 1)
-            angle = percent * 360
-
-            st.markdown(
-                f"""
-            <div style="
-                width:120px;height:120px;border-radius:50%;
-                background:conic-gradient(#22c55e {angle}deg,#1f2937 {angle}deg);
-                display:flex;align-items:center;justify-content:center;margin:auto;">
-            <div style="
-                width:85px;height:85px;background:#0b0f19;
-                border-radius:50%;display:flex;
-                align-items:center;justify-content:center;color:white;">
-                {int(percent*100)}%
-            </div>
-            </div>
-            <p style="text-align:center">{label}</p>
-        """,
-                unsafe_allow_html=True,
-            )
 
     r1, r2, r3 = st.columns(3)
 
     with r1:
         sleep_hours = memory.get("sleep_hours", 0)
         # Cap sleep at 7 for scoring psychology
-        sleep_hours = memory.get("sleep_hours", 0)
         sleep_percentage = min(int((sleep_hours / 8) * 100), 100)
 
         progress_ring(sleep_percentage, 100, "Sleep")
@@ -770,8 +802,8 @@ with tab_brain:
     classify_health_identity(memory)
     generate_pattern_reflection(memory)
     generate_future_projection(memory)
-
-    st.subheader("🔮 Your Health Intelligence")
+    if False:
+        st.subheader("🔮 Your Health Intelligence")
 
     if memory.get("pattern_insights"):
         st.info(memory["pattern_insights"][-1])
@@ -782,7 +814,8 @@ with tab_brain:
     if memory.get("emotional_rewards"):
         st.success(memory["emotional_rewards"][-1])
 
-    st.subheader("🧬 Your Health Identity")
+    if False:
+        st.subheader("🧬 Your Health Identity")
     st.success(memory.get("health_identity", ""))
 
     if memory.get("pattern_insights"):
@@ -794,18 +827,17 @@ with tab_brain:
         st.subheader("🔮 Health Outlook")
         st.warning(memory["future_projection"])
 
-
-    if memory.get("nutrition_insights"):
+    if False and memory.get("nutrition_insights"):
         st.subheader("🧠 AI Nutritionist Insights")
         for i in memory.get("nutrition_insights", []):
             st.info(i)
 
-    if memory.get("metabolic_alerts"):
+    if False and memory.get("metabolic_alerts"):
         st.subheader("🧬 Metabolic Health Signals")
         for a in memory.get("metabolic_alerts", []):
             st.warning(a)
 
-    if memory.get("behavior_alerts"):
+    if False and memory.get("behavior_alerts"):
         st.subheader("🧠 Behavior Insights")
         for b in memory.get("behavior_alerts", []):
             st.warning(b)
@@ -843,54 +875,54 @@ with tab_brain:
 
     st.markdown("---")
 
-    st.subheader("🧠 Current State")
+    with st.expander("🧠 System Intelligence"):
 
-    sleep = memory.get("sleep_hours", 0)
-    energy = memory.get("energy_level", 0)
-    mood = memory.get("daily_mood", 0)
+        sleep = memory.get("sleep_hours", 0)
+        energy = memory.get("energy_level", 0)
+        mood = memory.get("daily_mood", 0)
 
-    state_messages = []
+        state_messages = []
 
-    # Sleep interpretation
-    if sleep <= 4:
-        state_messages.append("⚠️ Sleep debt detected. Prioritize recovery.")
-    elif sleep <= 6:
-        state_messages.append("😐 Moderate sleep. Avoid pushing too hard.")
-    else:
-        state_messages.append("✅ Well rested. Body ready.")
+        # Sleep interpretation
+        if sleep <= 4:
+            state_messages.append("⚠️ Sleep debt detected. Prioritize recovery.")
+        elif sleep <= 6:
+            state_messages.append("😐 Moderate sleep. Avoid pushing too hard.")
+        else:
+            state_messages.append("✅ Well rested. Body ready.")
 
-    # Energy interpretation
-    if energy <= 4:
-        state_messages.append("🔋 Low energy window.")
-    elif energy <= 7:
-        state_messages.append("⚖️ Balanced energy.")
-    else:
-        state_messages.append("🔥 High output window.")
+        # Energy interpretation
+        if energy <= 4:
+            state_messages.append("🔋 Low energy window.")
+        elif energy <= 7:
+            state_messages.append("⚖️ Balanced energy.")
+        else:
+            state_messages.append("🔥 High output window.")
 
-    # Mood interpretation
-    if mood <= 4:
-        state_messages.append("💛 Emotional care recommended.")
-    elif mood <= 7:
-        state_messages.append("🙂 Stable emotional state.")
-    else:
-        state_messages.append("🌟 Positive emotional momentum.")
+        # Mood interpretation
+        if mood <= 4:
+            state_messages.append("💛 Emotional care recommended.")
+        elif mood <= 7:
+            state_messages.append("🙂 Stable emotional state.")
+        else:
+            state_messages.append("🌟 Positive emotional momentum.")
 
-    if memory.get("stress_score", 0) >= 4:
-        st.error("⚠ High stress detected. Prioritize recovery.")
-    elif memory.get("stress_score", 0) >= 2:
-        st.warning("Moderate stress. Stay mindful today.")
-    else:
-        st.success("Stable state. Keep building.")
+        if memory.get("stress_score", 0) >= 4:
+            st.error("⚠ High stress detected. Prioritize recovery.")
+        elif memory.get("stress_score", 0) >= 2:
+            st.warning("Moderate stress. Stay mindful today.")
+        else:
+            st.success("Stable state. Keep building.")
 
-    streak = memory.get("streak_days", 0)
+        streak = memory.get("streak_days", 0)
 
-    if streak >= 7:
-        st.info("Your nervous system adapts faster when consistency is high.")
-    elif streak >= 3:
-        st.info("Consistency builds biological stability.")    
+        if streak >= 7:
+            st.info("Your nervous system adapts faster when consistency is high.")
+        elif streak >= 3:
+            st.info("Consistency builds biological stability.")
 
-    for msg in state_messages:
-        st.write(msg)
+        for msg in state_messages:
+            st.write(msg)
 
     st.markdown("---")
 
@@ -907,51 +939,19 @@ with tab_brain:
 
     st.markdown("---")
 
-    health_master_brain(memory)
-
     if memory.get("system_intervention"):
         st.info(memory["system_intervention"])
 
 
 with tab_sync:
 
-    strategy = generate_daily_strategy(memory)
-    mode = memory.get("life_os_mode", "wellness")
-    burnout = memory.get("burnout_risk_level", 0)
-    system_state = memory.get("system_state", "balanced")
-
-    color = "#16a34a"  # default green
-
-    if system_state == "overloaded":
-        color = "#dc2626"
-    elif system_state == "recovery":
-        color = "#f59e0b"
-    elif mode == "performance":
-        color = "#2563eb"
-    elif mode == "discipline":
-        color = "#7c3aed"
-    elif mode == "resilience":
-        color = "#0ea5e9"
-
-    st.markdown(
-        f"""
-        <div style="
-            padding:14px;
-            border-radius:12px;
-            background: linear-gradient(135deg,{color},#111827);
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
-            font-weight:600;
-            margin-bottom:15px;">
-            🎯 Today’s Strategy: {strategy}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    render_strategy_banner(memory)
 
     st.markdown("---")
 
 
-    st.header("🔄 Daily Sync")
+    st.header("📥 Daily Check-in")
+    st.info("This helps Asha understand your sleep, energy and mood so she can adapt your plan.")
 
     from datetime import datetime
     today = datetime.now().date()
@@ -1009,12 +1009,23 @@ with tab_sync:
         memory["last_checkin_date"] = str(today)
         memory["emotion_state"] = emotion
         memory["fix_sleep_cycle"] = fix_sleep
+        save_memory(memory)
         st.markdown("---")
 
         nutritionist_brain(memory)
         metabolic_predictor(memory)
         behavior_brain(memory)
         medicine_reminder_agent(memory)
+
+        stress_engine(memory)
+        system_state_engine(memory)
+        hormonal_intelligence_core(memory)
+
+        classify_health_identity(memory)
+        generate_pattern_reflection(memory)
+        generate_future_projection(memory)
+
+        health_master_brain(memory)
 
         st.markdown("---")
 
@@ -1030,26 +1041,20 @@ with tab_sync:
             {"sleep": sleep_hours, "energy": energy, "water": water, "exercise": exercise}
             )
 
-        memory["engagement_score"] = memory.get("engagement_score", 0) + 1
+        memory["engagement_score"] += 1
 
         add_xp(memory)
-        update_streak(memory)
+        if memory.get("last_checkin_date") == str(today):
+            update_streak(memory)
 
-        calculate_health_score(memory)
+        life_decision_engine(memory)
+        life_os_orchestrator(memory)
         daily_neural_sync(memory)
 
         from agents.habit_reinforcement_engine import neural_habit_engine
         neural_habit_engine(memory)
         st.success("Check-in saved!")
 
-    st.subheader("📸 Upload Food Image")
-    food_image = st.file_uploader("Upload meal photo")
-
-    if food_image:
-        from agents.food_vision_engine import analyze_food_image
-
-        result = analyze_food_image(food_image, memory)
-        st.info(result)
 
     if memory.get("engagement_score", 0) > 0 and memory.get("engagement_score", 0) % 5 == 0:
         st.success("🔥 Amazing consistency! Your future self is proud of you.")
@@ -1068,45 +1073,26 @@ with tab_sync:
 
 with tab_coach:
 
-    strategy = generate_daily_strategy(memory)
-    mode = memory.get("life_os_mode", "wellness")
-    burnout = memory.get("burnout_risk_level", 0)
-    system_state = memory.get("system_state", "balanced")
-
-    color = "#16a34a"  # default green
-
-    if system_state == "overloaded":
-        color = "#dc2626"
-    elif system_state == "recovery":
-        color = "#f59e0b"
-    elif mode == "performance":
-        color = "#2563eb"
-    elif mode == "discipline":
-        color = "#7c3aed"
-    elif mode == "resilience":
-        color = "#0ea5e9"
-
-    st.markdown(
-        f"""
-        <div style="
-            padding:14px;
-            border-radius:12px;
-            background: linear-gradient(135deg,{color},#111827);
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
-            font-weight:600;
-            margin-bottom:15px;">
-            🎯 Today’s Strategy: {strategy}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    render_strategy_banner(memory)
 
     st.markdown("---")
 
 
-    st.header("💬 Coach")
+    st.header("💬 Talk to Coach")
+    st.caption("Your AI health companion. Ask about sleep, diet, workouts, stress or habits.")
 
     st.markdown("---")
+
+    st.subheader("📸 Meal Analysis")
+    st.caption("Send a meal photo and Coach will estimate calories and nutrition.")
+
+    food_image = st.file_uploader("Upload meal photo", key="coach_food")
+
+    if food_image:
+        from agents.food_vision_engine import analyze_food_image
+        result = analyze_food_image(food_image, memory)
+        st.info(result)
+
     st.subheader("🪞 Future Self Insight")
 
     streak = memory.get("streak_days", 0)
@@ -1176,7 +1162,7 @@ with tab_coach:
 
     # Chat input ALWAYS renders
     uploaded_image = st.file_uploader("Upload image (optional)", key="chat_img")
-    user_msg = st.chat_input("Ask Asha...")
+    user_msg = st.chat_input("Message Asha about your health...")
     # ---- Auto-trigger Coach Message ----
     if memory.get("coach_auto_message"):
         auto_msg = memory.pop("coach_auto_message")
@@ -1184,8 +1170,21 @@ with tab_coach:
 
     if user_msg:
 
+        # ----- Rate limit -----
+        if not allow_request(memory):
+            st.warning("Too many requests. Please slow down.")
+            st.stop()
+
+        # ===== Budget Guard =====
+        if not check_budget(memory):
+            st.error("Daily AI usage limit reached.")
+            st.stop()
+
         try:
-            reply = ask_health_coach(memory, user_msg, messages.copy(), uploaded_image)
+            reply = ask_health_coach(memory, user_msg, copy.deepcopy(messages), uploaded_image)
+
+            register_ai_call(memory)
+
         except Exception:
             # Offline fallback (no API billing)
             reply = (
@@ -1210,38 +1209,7 @@ with tab_coach:
 
 with tab_trends:
 
-    strategy = generate_daily_strategy(memory)
-    mode = memory.get("life_os_mode", "wellness")
-    burnout = memory.get("burnout_risk_level", 0)
-    system_state = memory.get("system_state", "balanced")
-
-    color = "#16a34a"  # default green
-
-    if system_state == "overloaded":
-        color = "#dc2626"
-    elif system_state == "recovery":
-        color = "#f59e0b"
-    elif mode == "performance":
-        color = "#2563eb"
-    elif mode == "discipline":
-        color = "#7c3aed"
-    elif mode == "resilience":
-        color = "#0ea5e9"
-
-    st.markdown(
-        f"""
-        <div style="
-            padding:14px;
-            border-radius:12px;
-            background: linear-gradient(135deg,{color},#111827);
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
-            font-weight:600;
-            margin-bottom:15px;">
-            🎯 Today’s Strategy: {strategy}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    render_strategy_banner(memory)
 
     st.markdown("---")
 
@@ -1316,40 +1284,82 @@ with tab_trends:
     else:
         premium_lock()
 
+
+
+with tab_brain:
+
+    st.header("🧠 Advanced Health Intelligence")
+    st.caption("Deep biological insights generated by your AI system.")
+
+    st.markdown("---")
+
+    # Hormonal intelligence
+    st.subheader("🧬 Hormonal Intelligence")
+
+    phase = memory.get("current_cycle_phase")
+    cycle_day = memory.get("cycle_day")
+    next_period = memory.get("next_period_estimate")
+
+    if phase:
+        st.info(f"Current Phase: {phase}")
+        st.write(f"Cycle Day: {cycle_day}")
+        st.write(f"Next Period Estimate: {next_period}")
+
+    st.markdown("---")
+
+    # Health identity
+    st.subheader("🧬 Health Identity")
+
+    if memory.get("health_identity"):
+        st.success(memory.get("health_identity"))
+
+    st.markdown("---")
+
+    # Pattern insights
+    if memory.get("pattern_insights"):
+        st.subheader("🧠 Pattern Insights")
+
+        for insight in memory.get("pattern_insights", []):
+            st.info(insight)
+
+    st.markdown("---")
+
+    # Future projection
+    if memory.get("future_projection"):
+        st.subheader("🔮 Future Health Projection")
+        st.warning(memory.get("future_projection"))
+
+    st.markdown("---")
+
+    # Nutrition insights
+    if memory.get("nutrition_insights"):
+        st.subheader("🥗 Nutrition Intelligence")
+
+        for insight in memory.get("nutrition_insights", []):
+            st.info(insight)
+
+    st.markdown("---")
+
+    # Metabolic alerts
+    if memory.get("metabolic_alerts"):
+        st.subheader("🧬 Metabolic Signals")
+
+        for alert in memory.get("metabolic_alerts", []):
+            st.warning(alert)
+
+    st.markdown("---")
+
+    # Behavior alerts
+    if memory.get("behavior_alerts"):
+        st.subheader("🧠 Behavior Intelligence")
+
+        for alert in memory.get("behavior_alerts", []):
+            st.warning(alert)
+
+
 with tab_planner:
 
-    strategy = generate_daily_strategy(memory)
-    mode = memory.get("life_os_mode", "wellness")
-    burnout = memory.get("burnout_risk_level", 0)
-    system_state = memory.get("system_state", "balanced")
-
-    color = "#16a34a"  # default green
-
-    if system_state == "overloaded":
-        color = "#dc2626"
-    elif system_state == "recovery":
-        color = "#f59e0b"
-    elif mode == "performance":
-        color = "#2563eb"
-    elif mode == "discipline":
-        color = "#7c3aed"
-    elif mode == "resilience":
-        color = "#0ea5e9"
-
-    st.markdown(
-        f"""
-        <div style="
-            padding:14px;
-            border-radius:12px;
-            background: linear-gradient(135deg,{color},#111827);
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
-            font-weight:600;
-            margin-bottom:15px;">
-            🎯 Today’s Strategy: {strategy}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    render_strategy_banner(memory)
 
     st.markdown("---")
 
@@ -1392,38 +1402,7 @@ with tab_planner:
         premium_lock()
 
 with tab_vault:
-    strategy = generate_daily_strategy(memory)
-    mode = memory.get("life_os_mode", "wellness")
-    burnout = memory.get("burnout_risk_level", 0)
-    system_state = memory.get("system_state", "balanced")
-
-    color = "#16a34a"  # default green
-
-    if system_state == "overloaded":
-        color = "#dc2626"
-    elif system_state == "recovery":
-        color = "#f59e0b"
-    elif mode == "performance":
-        color = "#2563eb"
-    elif mode == "discipline":
-        color = "#7c3aed"
-    elif mode == "resilience":
-        color = "#0ea5e9"
-
-    st.markdown(
-        f"""
-        <div style="
-            padding:14px;
-            border-radius:12px;
-            background: linear-gradient(135deg,{color},#111827);
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
-            font-weight:600;
-            margin-bottom:15px;">
-            🎯 Today’s Strategy: {strategy}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    render_strategy_banner(memory)
 
     st.markdown("---")
 
