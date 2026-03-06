@@ -1294,7 +1294,6 @@ with tab_brain:
 
     # Health identity
     st.subheader("🧬 Health Identity")
-
     if memory.get("health_identity"):
         st.success(memory.get("health_identity"))
 
