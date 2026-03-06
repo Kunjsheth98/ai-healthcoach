@@ -426,7 +426,6 @@ with tab_home:
                         }
 
                     memory["onboarding_complete"] = True
-                    memory["onboarding_step"] = 1
                     save_memory(memory)
                     st.rerun()
 
