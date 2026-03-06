@@ -1,3 +1,6 @@
+import sys
+sys.modules.clear()
+
 import streamlit as st
 import copy
 # ================= AUTH =================
