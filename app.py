@@ -16,9 +16,7 @@ from core.subscription import has_premium_access, premium_lock
 from core.budget_guard import check_budget, register_ai_call, allow_request
 
 # ================= AGENTS =================
-from agents.health_score import calculate_health_score
 from agents.gamification import update_streak, add_xp, gamification_ui
-from agents.morning_briefing import morning_briefing_ui
 from agents.master_brain import health_master_brain
 
 from agents.weekly_story import weekly_story_ui
