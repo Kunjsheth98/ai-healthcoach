@@ -126,13 +126,6 @@ if not st.session_state["user"]:
             if success:
                 st.success(msg)
 
-                # AUTO LOGIN
-                st.session_state.user = new_user
-                st.session_state.plan = "free"
-                st.session_state["active_tab"] = "coach"
-
-                st.rerun()
-
             else:
                 st.error(msg)
 
@@ -426,6 +419,7 @@ with tab_home:
                         }
 
                     memory["onboarding_complete"] = True
+                    memory["onboarding_step"] = 1
                     save_memory(memory)
                     st.rerun()
 
@@ -763,23 +757,23 @@ with tab_home:
     bf_history = memory.get("body_fat_history", [])
 
     if len(bf_history) >= 2:
-        with st.expander(" 📈 Health Trends"):
-            st.subheader("📈 Body Fat Trend")
+        st.expander(" 📈 Health Trends")
+        st.subheader("📈 Body Fat Trend")
 
-            import pandas as pd
-            from datetime import datetime, timedelta
+        import pandas as pd
+        from datetime import datetime, timedelta
 
-            dates = [
-                datetime.now().date() - timedelta(days=len(bf_history)-i-1)
-                for i in range(len(bf_history))
-            ]
+        dates = [
+            datetime.now().date() - timedelta(days=len(bf_history)-i-1)
+            for i in range(len(bf_history))
+        ]
 
-            df = pd.DataFrame({
-                "Date": dates,
-                "Body Fat %": bf_history
-            })
+        df = pd.DataFrame({
+            "Date": dates,
+            "Body Fat %": bf_history
+        })
 
-            st.line_chart(df.set_index("Date"))  
+        st.line_chart(df.set_index("Date"))  
 
 
     r1, r2, r3 = st.columns(3)
@@ -804,9 +798,6 @@ with tab_home:
 
     if memory.get("pattern_insights"):
         st.info(memory["pattern_insights"][-1])
-
-    if memory.get("future_projection"):
-        st.warning(memory["future_projection"])
 
     if memory.get("emotional_rewards"):
         st.success(memory["emotional_rewards"][-1])
@@ -926,6 +917,8 @@ with tab_home:
 
     st.markdown("---")
 
+    health_master_brain(memory)
+
     if memory.get("system_intervention"):
         st.info(memory["system_intervention"])
 
@@ -1008,8 +1001,6 @@ with tab_sync:
         classify_health_identity(memory)
         generate_pattern_reflection(memory)
         generate_future_projection(memory)
-
-        health_master_brain(memory)
         save_memory(memory)
 
         st.markdown("---")
