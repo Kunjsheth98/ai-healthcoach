@@ -7,29 +7,24 @@ from agents.health_identity import classify_health_identity
 from agents.health_score import calculate_health_score
 from datetime import date
 
-def life_os_orchestrator(memory):
+def life_os_orchestrator(memory, source="general"):
 
-    today = str(date.today())
+    # Engines already executed during check-in
+    if source == "checkin":
+        stress_engine(memory)
+        system_state_engine(memory)
+        hormonal_intelligence_core(memory)
 
-    # make sure key exists
-    last_run = memory.get("last_orchestrator_run")
+        classify_health_identity(memory)
+        calculate_health_score(memory)
 
-    # run heavy engines only once per day
-    if last_run != today:
+    else:
+        stress_engine(memory)
+        system_state_engine(memory)
+        hormonal_intelligence_core(memory)
 
-        try:
-            stress_engine(memory)
-            system_state_engine(memory)
+        metabolic_predictor(memory)
+        behavior_brain(memory)
 
-            hormonal_intelligence_core(memory)
-
-            metabolic_predictor(memory)
-            behavior_brain(memory)
-
-            classify_health_identity(memory)
-            calculate_health_score(memory)
-
-            memory["last_orchestrator_run"] = today
-
-        except Exception as e:
-            memory["orchestrator_error"] = str(e)
+        classify_health_identity(memory)
+        calculate_health_score(memory)
