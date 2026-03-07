@@ -532,11 +532,15 @@ with tab_home:
             memory["primary_intent"] = "movement"
             save_memory(memory)
 
+    stress_engine(memory)
+    system_state_engine(memory)
+    hormonal_intelligence_core(memory)        
+
 
     if memory.get("stress_recommendations"):
         st.subheader("🧠 Stress Recovery Suggestions")
-        for r in memory.get("stress_recommendations", []):
-            st.info(r)
+    for r in memory.get("stress_recommendations", []):
+        st.info(r)
 
     st.subheader("🧭 System Mode")
 
@@ -567,8 +571,8 @@ with tab_home:
 
         explanation = phase_explanations.get(phase, "")
 
-        cycle_day = ctx["cycle_day"]
-        next_period = ctx["next_period"]
+        cycle_day = memory.get("cycle_day")
+        next_period = memory.get("next_period_estimate")
 
         st.markdown("---")
         if False:
@@ -792,6 +796,10 @@ with tab_home:
         progress_ring(memory.get("energy_level", 5), 10, "Energy")
 
     # ---------------- FIRST DAY HOOK ENGINE ----------------
+    classify_health_identity(memory)
+    generate_pattern_reflection(memory)
+    generate_future_projection(memory)
+
 
     if False:
         st.subheader("🔮 Your Health Intelligence")
@@ -917,7 +925,7 @@ with tab_home:
 
     st.markdown("---")
 
-    #health_master_brain(memory)
+    health_master_brain(memory)
 
     if memory.get("system_intervention"):
         st.info(memory["system_intervention"])
@@ -993,16 +1001,6 @@ with tab_sync:
         metabolic_predictor(memory)
         behavior_brain(memory)
         medicine_reminder_agent(memory)
-
-        stress_engine(memory)
-        system_state_engine(memory)
-        hormonal_intelligence_core(memory)
-
-        classify_health_identity(memory)
-        generate_pattern_reflection(memory)
-        generate_future_projection(memory)
-
-        health_master_brain(memory)
         save_memory(memory)
 
         st.markdown("---")
