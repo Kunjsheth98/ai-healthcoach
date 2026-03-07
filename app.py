@@ -533,7 +533,9 @@ with tab_home:
             memory["primary_intent"] = "movement"
             save_memory(memory)
 
-    life_os_orchestrator(memory)      
+    stress_engine(memory)
+    system_state_engine(memory)
+    hormonal_intelligence_core(memory)    
 
 
     if memory.get("stress_recommendations"):
@@ -1022,7 +1024,7 @@ with tab_sync:
             update_streak(memory)
 
         life_decision_engine(memory)
-        #life_os_orchestrator(memory , "checkin")
+        life_os_orchestrator(memory , "checkin")
         daily_neural_sync(memory)
 
         from agents.habit_reinforcement_engine import neural_habit_engine
