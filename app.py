@@ -1127,11 +1127,6 @@ with tab_coach:
         if not check_budget(memory):
             st.error("Daily AI usage limit reached.")
             st.stop()
-        
-        try:
-            life_os_orchestrator(memory)
-        except Exception as e:
-            memory["orchestrator_error"] = str(e)
 
         try:
             reply = ask_health_coach(memory, user_msg, copy.deepcopy(messages), uploaded_image)
