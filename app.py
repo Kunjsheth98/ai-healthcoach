@@ -145,7 +145,7 @@ def generate_daily_strategy(memory):
     focus = memory.get("primary_intent", "general")
     burnout = memory.get("burnout_risk_level", 0)
 
-    if burnout >= 70:
+    if burnout >= 7:
         return "Protect Recovery"
 
     if focus == "sleep":
@@ -262,6 +262,7 @@ if st.sidebar.button("➕ New Health Plan"):
     new_chat_id = str(uuid.uuid4())
     save_chat(new_chat_id, [])
     st.session_state.current_chat = new_chat_id
+    st.rerun()
 
 # Initialize current chat
 if "current_chat" not in st.session_state:
@@ -314,7 +315,7 @@ tab_brain = all_tabs[5]
 tab_vault = all_tabs[6]
 
 if st.session_state.user in ADMIN_USERS:
-    tab_admin = all_tabs[6]
+    tab_admin = all_tabs[-1]
 
 # =====================================================
 # DASHBOARD
@@ -532,9 +533,7 @@ with tab_home:
             memory["primary_intent"] = "movement"
             save_memory(memory)
 
-    stress_engine(memory)
-    system_state_engine(memory)
-    hormonal_intelligence_core(memory)        
+    life_os_orchestrator(memory)      
 
 
     if memory.get("stress_recommendations"):
@@ -698,7 +697,7 @@ with tab_home:
         st.success(identity)
 
     food_calories_today = sum(
-        (entry.get("calories") or 0) for entry in memory["daily_food_log"]
+        (entry.get("calories") or 0) for entry in memory.get("daily_food_log", [])
     )
     c5.metric("🍛 Food Calories", food_calories_today)
     c6.metric(
@@ -1113,7 +1112,7 @@ with tab_coach:
     uploaded_image = st.file_uploader("Upload image (optional)", key="chat_img")
     user_msg = st.chat_input("Message Asha about your health...")
     # ---- Auto-trigger Coach Message ----
-    if memory.get("coach_auto_message"):
+    if not user_msg and memory.get("coach_auto_message"):
         auto_msg = memory.pop("coach_auto_message")
         user_msg = auto_msg
 
@@ -1128,7 +1127,12 @@ with tab_coach:
         if not check_budget(memory):
             st.error("Daily AI usage limit reached.")
             st.stop()
-
+        
+        try:
+            life_os_orchestrator(memory)
+        except Exception as e:
+            memory["orchestrator_error"] = str(e)
+            
         try:
             reply = ask_health_coach(memory, user_msg, copy.deepcopy(messages), uploaded_image)
 
