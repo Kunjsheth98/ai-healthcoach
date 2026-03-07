@@ -993,14 +993,13 @@ with tab_sync:
         memory["last_checkin_date"] = str(today)
         memory["emotion_state"] = emotion
         memory["fix_sleep_cycle"] = fix_sleep
-
+        save_memory(memory)
         st.markdown("---")
 
         nutritionist_brain(memory)
         metabolic_predictor(memory)
         behavior_brain(memory)
         medicine_reminder_agent(memory)
-        save_memory(memory)
 
         st.markdown("---")
 
