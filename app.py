@@ -1023,7 +1023,7 @@ with tab_sync:
             update_streak(memory)
 
         life_decision_engine(memory)
-        life_os_orchestrator(memory , "checkin")
+        #life_os_orchestrator(memory , "checkin")
         daily_neural_sync(memory)
 
         from agents.habit_reinforcement_engine import neural_habit_engine
