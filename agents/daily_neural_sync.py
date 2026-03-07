@@ -373,7 +373,7 @@ def daily_neural_sync(memory):
 
     # Get body data
     profile = memory.get("profile", {})
-    weight = profile.get("weight_kg")
+    weight = profile.get("weight_kg", 70)
     waist = profile.get("waist_cm")
 
     height = profile.get("height_cm", 170)
@@ -424,6 +424,8 @@ def daily_neural_sync(memory):
     memory["hormonal_stress_index"] = hormonal_stress 
 
     # Adaptive correction based on calorie vs intake
+    weight = memory.get("profile", {}).get("weight_kg", 70)
+
     calorie_target = memory.get("daily_calorie_target", weight * 30)
     # last 7 days intake (if available)
     weekly_log = memory.get("daily_food_log", [])[-7:]

@@ -338,6 +338,8 @@ with tab_home:
             full_name = st.text_input("Full Name")
             age = st.number_input("Age", 10, 100, 25)
             gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+            weight = st.number_input("Weight (kg)", 30.0, 200.0, 70.0)
+            height = st.number_input("Height (cm)", 120, 220, 170)
             goal_type = st.selectbox(
                 "Main health goal",
                 [
@@ -355,6 +357,8 @@ with tab_home:
                     "name": full_name,
                     "age": age,
                     "gender": gender,
+                    "weight_kg": weight,
+                    "height_cm": height,
                 }
 
                 memory.setdefault("lifestyle", {})
@@ -523,15 +527,12 @@ with tab_home:
 
         if col1.button("😴 Fix Sleep"):
             memory["primary_intent"] = "sleep"
-            save_memory(memory)
 
         if col2.button("🧘 Reduce Stress"):
             memory["primary_intent"] = "stress"
-            save_memory(memory)
 
         if col3.button("🏋️ Start Movement"):
             memory["primary_intent"] = "movement"
-            save_memory(memory)
 
     stress_engine(memory)
     system_state_engine(memory)
