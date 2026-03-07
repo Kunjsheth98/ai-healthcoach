@@ -1016,7 +1016,7 @@ with tab_sync:
             {"sleep": sleep_hours, "energy": energy, "water": water, "exercise": exercise}
             )
 
-        memory["engagement_score"] += 1
+        memory["engagement_score"] = memory.get("engagement_score", 0) + 1
 
         add_xp(memory)
         if memory.get("last_checkin_date") == str(today):
