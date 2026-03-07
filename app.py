@@ -1132,7 +1132,7 @@ with tab_coach:
             life_os_orchestrator(memory)
         except Exception as e:
             memory["orchestrator_error"] = str(e)
-            
+
         try:
             reply = ask_health_coach(memory, user_msg, copy.deepcopy(messages), uploaded_image)
 
@@ -1294,8 +1294,8 @@ with tab_brain:
     if memory.get("pattern_insights"):
         st.subheader("🧠 Pattern Insights")
 
-        for insight in memory.get("pattern_insights", []):
-            st.info(insight)
+    for insight in memory.get("pattern_insights", []):
+        st.info(insight)
 
     st.markdown("---")
 
