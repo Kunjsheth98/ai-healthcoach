@@ -54,7 +54,8 @@ from agents.hormonal_intelligence import hormonal_intelligence_core
 from agents.life_os_orchestrator import life_os_orchestrator
 from agents.decision_engine import life_decision_engine
 # ================= ADMIN =================
-
+from admin.admin_dashboard import admin_dashboard
+from admin.control_center import admin_control_center
 # ================= AI =================
 from ai.coach import ask_health_coach
 # ================= DASHBOARD =================
@@ -319,7 +320,6 @@ if st.session_state.user in ADMIN_USERS:
 # DASHBOARD
 # =====================================================
 with tab_home:
-    ctx = get_system_context(memory)
     # ================= CLEAN STRUCTURED ONBOARDING =================
 
     if not memory.get("onboarding_complete"):
@@ -462,12 +462,12 @@ with tab_home:
     # SYSTEM MODE
     # ===============================
 
-    focus_mode = ctx["strategic_focus"]
+    mode = memory.get("strategic_focus", "consistency")
 
-    if focus_mode == "recovery":
+    if mode == "recovery":
         st.warning("🧘 Recovery Mode — focus on sleep, hydration, and low stress today.")
 
-    elif focus_mode == "performance":
+    elif mode == "performance":
         st.success("🚀 Performance Window — your body is ready for higher output.")
 
     else:
@@ -475,15 +475,15 @@ with tab_home:
 
     st.markdown(f"""
         ### 🧠 Current System State
-        * Strategic Focus: {ctx["strategic_focus"]}
-        * Global Intensity: {ctx["global_intensity"]}
-        * Identity Maturity: {ctx["identity_maturity"]}
-        * Burnout Risk: {ctx["burnout"]}
+        * Strategic Focus: {memory.get("strategic_focus")}
+        * Global Intensity: {memory.get("global_intensity_level")}
+        * Identity Maturity: {memory.get("identity_maturity")}
+        * Burnout Risk: {memory.get("burnout_risk_level")}
         """)
 
-    phase = ctx["phase"]
-    mode = ctx["mode"]
-    burnout = ctx["burnout"]
+    phase = memory.get("current_cycle_phase")
+    mode = memory.get("life_os_mode")
+    burnout = memory.get("burnout_risk_level", 0)
 
     st.subheader("🎯 Today Your Body Needs")
 
@@ -558,7 +558,7 @@ with tab_home:
     else:
         st.info("⚖ Balanced Mode: Maintain steady progress.")    
 
-    phase = ctx["phase"]
+    phase = memory.get("current_cycle_phase")
 
     if phase:
 
@@ -653,7 +653,7 @@ with tab_home:
         )
         
 
-    if ctx["burnout"] >= 7:
+    if memory.get("burnout_risk_level", 0) >= 7:
         st.error("🚨 Neural Burnout Engine Warning: Immediate recovery needed.")
     elif memory.get("burnout_risk_level", 0) >= 4:
         st.warning("⚠ Neural Burnout Rising. Adjust workload.")
@@ -1373,8 +1373,6 @@ with tab_vault:
     prescription_reader_ui(memory)
 
 if st.session_state.user in ADMIN_USERS:
-    from admin.admin_dashboard import admin_dashboard
-    from admin.control_center import admin_control_center
     tab_admin = all_tabs[-1]   # last tab is admin
     with tab_admin:
         admin_dashboard()
