@@ -5,18 +5,31 @@ from agents.metabolic_predictor import metabolic_predictor
 from agents.behavior_brain import behavior_brain
 from agents.health_identity import classify_health_identity
 from agents.health_score import calculate_health_score
-
+from datetime import date
 
 def life_os_orchestrator(memory):
 
-    stress_engine(memory)
-    system_state_engine(memory)
+    today = str(date.today())
 
-    hormonal_intelligence_core(memory)
+    # make sure key exists
+    last_run = memory.get("last_orchestrator_run")
 
-    metabolic_predictor(memory)
-    behavior_brain(memory)
+    # run heavy engines only once per day
+    if last_run != today:
 
-    classify_health_identity(memory)
+        try:
+            stress_engine(memory)
+            system_state_engine(memory)
 
-    calculate_health_score(memory)
+            hormonal_intelligence_core(memory)
+
+            metabolic_predictor(memory)
+            behavior_brain(memory)
+
+            classify_health_identity(memory)
+            calculate_health_score(memory)
+
+            memory["last_orchestrator_run"] = today
+
+        except Exception as e:
+            memory["orchestrator_error"] = str(e)
