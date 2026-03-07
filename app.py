@@ -17,7 +17,7 @@ from core.budget_guard import check_budget, register_ai_call, allow_request
 
 # ================= AGENTS =================
 from agents.gamification import update_streak, add_xp, gamification_ui
-from agents.master_brain import health_master_brain
+#from agents.master_brain import health_master_brain
 
 from agents.weekly_story import weekly_story_ui
 from agents.adaptive_planner import adaptive_life_planner
@@ -917,7 +917,7 @@ with tab_home:
 
     st.markdown("---")
 
-    health_master_brain(memory)
+    #health_master_brain(memory)
 
     if memory.get("system_intervention"):
         st.info(memory["system_intervention"])
