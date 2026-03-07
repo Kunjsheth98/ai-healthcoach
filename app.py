@@ -54,8 +54,6 @@ from agents.hormonal_intelligence import hormonal_intelligence_core
 from agents.life_os_orchestrator import life_os_orchestrator
 from agents.decision_engine import life_decision_engine
 # ================= ADMIN =================
-from admin.admin_dashboard import admin_dashboard
-from admin.control_center import admin_control_center
 
 # ================= AI =================
 from ai.coach import ask_health_coach
@@ -1375,6 +1373,8 @@ with tab_vault:
     prescription_reader_ui(memory)
 
 if st.session_state.user in ADMIN_USERS:
+    from admin.admin_dashboard import admin_dashboard
+    from admin.control_center import admin_control_center
     tab_admin = all_tabs[-1]   # last tab is admin
     with tab_admin:
         admin_dashboard()
