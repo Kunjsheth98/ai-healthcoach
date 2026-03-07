@@ -1293,9 +1293,8 @@ with tab_brain:
     # Pattern insights
     if memory.get("pattern_insights"):
         st.subheader("🧠 Pattern Insights")
-
-    for insight in memory.get("pattern_insights", []):
-        st.info(insight)
+        for insight in memory.get("pattern_insights", []):
+            st.info(insight)
 
     st.markdown("---")
 
